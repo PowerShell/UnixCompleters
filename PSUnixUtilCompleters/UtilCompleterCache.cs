@@ -21,7 +21,7 @@ namespace PSUnixUtilCompleters
 
         private static readonly ConcurrentDictionary<string, string> s_commandCompletionFunctions = new ConcurrentDictionary<string, string>();
 
-        public IEnumerable<CompletionResult> CompleteCommand(
+        public static IEnumerable<CompletionResult> CompleteCommand(
             string command,
             string wordToComplete,
             CommandAst commandAst,
@@ -64,7 +64,7 @@ namespace PSUnixUtilCompleters
                 }
             }
 
-            string commandLine = "\"" + commandAst.Extent.Text + "\"";
+            string commandLine = "'" + commandAst.Extent.Text + "'";
             string bashWordArray;
 
             // Handle a case like '/mnt/c/Program Files'/<TAB> where the slash is outside the string
@@ -73,11 +73,11 @@ namespace PSUnixUtilCompleters
             if (currentExtent.Text.StartsWith("/") && currentExtent.StartColumnNumber == previousExtent.EndColumnNumber)
             {
                 commandLine = commandLine.Replace(previousExtent.Text + currentExtent.Text, wordToComplete);
-                bashWordArray = BuildCompWordsBashArrayString(commandLine, replaceAt: cursorPosition, replacementWord: wordToComplete);
+                bashWordArray = BuildCompWordsBashArrayString(commandAst.Extent.Text, replaceAt: cursorPosition, replacementWord: wordToComplete);
             }
             else
             {
-                bashWordArray = BuildCompWordsBashArrayString(commandLine);
+                bashWordArray = BuildCompWordsBashArrayString(commandAst.Extent.Text);
             }
 
             string completionCommand = BuildCompletionCommand(
@@ -94,7 +94,7 @@ namespace PSUnixUtilCompleters
                 .Split('\n')
                 .Distinct(StringComparer.Ordinal)
                 .ToList();
-            
+
             completionResults.Sort(StringComparer.Ordinal);
 
             string previousCompletion = null;
@@ -172,6 +172,7 @@ namespace PSUnixUtilCompleters
             using (var bashProc = new Process())
             {
                 bashProc.StartInfo.FileName = "/bin/bash";
+                //bashProc.StartInfo.FileName = "/mnt/c/Users/Robert Holt/Documents/Dev/sandbox/testexe/bin/Debug/netcoreapp3.0/publish/testexe";
                 bashProc.StartInfo.Arguments = argumentString;
                 bashProc.StartInfo.UseShellExecute = false;
                 bashProc.StartInfo.RedirectStandardOutput = true;
@@ -248,8 +249,7 @@ namespace PSUnixUtilCompleters
             int COMP_POINT,
             string completionFunction,
             string wordToComplete,
-            string previousWord
-        )
+            string previousWord)
         {
             return new StringBuilder(512)
                 .Append("-lic \". /usr/share/bash-completion/bash-completion 2>/dev/null; ")
@@ -257,11 +257,11 @@ namespace PSUnixUtilCompleters
                 .Append("COMP_WORDS=").Append(COMP_WORDS).Append("; ")
                 .Append("COMP_CWORD=").Append(COMP_CWORD).Append("; ")
                 .Append("COMP_POINT=").Append(COMP_POINT).Append("; ")
-                .Append("bind \"\"\"set completion-ignore-case on\"\"\" 2>/dev/null; ")
+                .Append("bind 'set completion-ignore-case on' 2>/dev/null; ")
                 .Append(completionFunction)
-                    .Append(" \"\"\"").Append(command).Append("\"\"\"")
-                    .Append(" \"\"\"").Append(wordToComplete).Append("\"\"\"")
-                    .Append(" \"\"\"").Append(previousWord).Append("\"\"\" 2>/dev/null; ")
+                    .Append(" '").Append(command).Append("'")
+                    .Append(" '").Append(wordToComplete).Append("'")
+                    .Append(" '").Append(previousWord).Append("' 2>/dev/null; ")
                 .Append("IFS=$'\\n'; ")
                 .Append("echo \"\"\"${COMPREPLY[*]}\"\"\"\"")
                 .ToString();

@@ -12,6 +12,7 @@ namespace PSUnixUtilCompleters
 {
     public class BashUtilCompleterCache
     {
+
         private static readonly string s_resolveCompleterCommandTemplate = string.Join("; ", new []
         {
             "-lic \". /usr/share/bash-completion 2>/dev/null",
@@ -252,7 +253,8 @@ namespace PSUnixUtilCompleters
             string previousWord)
         {
             return new StringBuilder(512)
-                .Append("-lic \". /usr/share/bash-completion/bash-completion 2>/dev/null; ")
+                .Append("-lic \". /usr/share/bash-completion/bash_completion 2>/dev/null; ")
+                .Append("__load_completion ").Append(command).Append(" 2>/dev/null; ")
                 .Append("COMP_LINE=").Append(COMP_LINE).Append("; ")
                 .Append("COMP_WORDS=").Append(COMP_WORDS).Append("; ")
                 .Append("COMP_CWORD=").Append(COMP_CWORD).Append("; ")

@@ -1,12 +1,18 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Management.Automation;
+using System.Management.Automation.Runspaces;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace PSUnixUtilCompleters
 {
     public class UtilCompleterInitializer : IModuleAssemblyInitializer
     {
+        private readonly static PropertyInfo s_executionContext = typeof(Runspace).GetProperty("ExecutionContext", BindingFlags.NonPublic | BindingFlags.Instance);
+        private readonly static PropertyInfo s_nativeArgumentCompleters = s_executionContext.PropertyType.GetProperty("NativeArgumentCompleters", BindingFlags.NonPublic | BindingFlags.Instance);
+
         private readonly static IReadOnlyList<string> s_nativeUtilDirs = new []
         {
             "/usr/local/sbin",
@@ -19,6 +25,36 @@ namespace PSUnixUtilCompleters
 
         public void OnImport()
         {
+            string[] utilNames = GetNativeUtilNames();
+            RegisterCompletersForCommands(utilNames);
+        }
+
+        public void RegisterCompletersForCommands(IEnumerable<string> commands)
+        {
+                object executionContext = s_executionContext.GetValue(Runspace.DefaultRunspace);
+
+                var nativeArgumentCompleters = (Dictionary<string, ScriptBlock>)s_nativeArgumentCompleters.GetValue(executionContext);
+                if (nativeArgumentCompleters == null)
+                {
+                    s_nativeArgumentCompleters.SetValue(executionContext, new Dictionary<string, ScriptBlock>());
+                    nativeArgumentCompleters = (Dictionary<string, ScriptBlock>)s_nativeArgumentCompleters.GetValue(executionContext);
+                }
+
+                foreach (string command in commands)
+                {
+                    nativeArgumentCompleters[command] = CreateCompleterScriptBlockForCommand(command);
+                }
+        }
+
+        public ScriptBlock CreateCompleterScriptBlockForCommand(string command)
+        {
+            string script = new StringBuilder(256)
+                .Append("param($wordToComplete,$commandAst,$cursorPosition)[PSUnixUtilCompleters.BashUtilCompleterCache]::CompleteCommand('")
+                .Append(command)
+                .Append("',$wordToComplete,$commandAst,$cursorPosition)")
+                .ToString();
+
+            return ScriptBlock.Create(script);
         }
 
         public string[] GetNativeUtilNames()

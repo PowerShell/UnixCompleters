@@ -23,12 +23,13 @@ namespace PSUnixUtilCompleters
         private static readonly ConcurrentDictionary<string, string> s_commandCompletionFunctions = new ConcurrentDictionary<string, string>();
 
         public static IEnumerable<CompletionResult> CompleteCommand(
+            string bashPath,
             string command,
             string wordToComplete,
             CommandAst commandAst,
             int cursorPosition)
         {
-            string completerFunction = ResolveCommandCompleterFunction(command);
+            string completerFunction = ResolveCommandCompleterFunction(bashPath, command);
 
             int cursorWordIndex = 0;
             string previousWord = commandAst.CommandElements[0].Extent.Text;
@@ -91,7 +92,7 @@ namespace PSUnixUtilCompleters
                 wordToComplete,
                 previousWord);
 
-            List<string> completionResults = InvokeBashWithArguments(completionCommand)
+            List<string> completionResults = InvokeBashWithArguments(bashPath, completionCommand)
                 .Split('\n')
                 .Distinct(StringComparer.Ordinal)
                 .ToList();
@@ -148,7 +149,7 @@ namespace PSUnixUtilCompleters
             return "'" + completionResult.Replace("'", "''") + "'";
         }
 
-        public static string ResolveCommandCompleterFunction(string commandName)
+        public static string ResolveCommandCompleterFunction(string bashPath, string commandName)
         {
             if (string.IsNullOrEmpty(commandName))
             {
@@ -157,7 +158,7 @@ namespace PSUnixUtilCompleters
 
             return s_commandCompletionFunctions.GetOrAdd(commandName, new Lazy<string>(() => {
                 string resolveCompleterInvocation = string.Format(s_resolveCompleterCommandTemplate, commandName);
-                string completerFunction = InvokeBashWithArguments(resolveCompleterInvocation).Trim();
+                string completerFunction = InvokeBashWithArguments(bashPath, resolveCompleterInvocation).Trim();
 
                 if (string.IsNullOrEmpty(completerFunction) || completerFunction.StartsWith("complete"))
                 {
@@ -168,12 +169,11 @@ namespace PSUnixUtilCompleters
             }).Value);
         }
 
-        private static string InvokeBashWithArguments(string argumentString)
+        private static string InvokeBashWithArguments(string bashPath, string argumentString)
         {
             using (var bashProc = new Process())
             {
-                bashProc.StartInfo.FileName = "/bin/bash";
-                //bashProc.StartInfo.FileName = "/mnt/c/Users/Robert Holt/Documents/Dev/sandbox/testexe/bin/Debug/netcoreapp3.0/publish/testexe";
+                bashProc.StartInfo.FileName = bashPath;
                 bashProc.StartInfo.Arguments = argumentString;
                 bashProc.StartInfo.UseShellExecute = false;
                 bashProc.StartInfo.RedirectStandardOutput = true;

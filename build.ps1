@@ -16,6 +16,7 @@ $script:SrcDir = "$PSScriptRoot/PSUnixUtilCompleters"
 $script:Framework = 'netstandard2.0'
 
 $script:Artifacts = @{
+    "zcomplete.sh" = "zcomplete.sh"
     "${script:ModuleName}.psd1" = "${script:ModuleName}.psd1"
     "PSUnixUtilCompleters/bin/$Configuration/${script:Framework}/PSUnixUtilCompleters.dll" = 'PSUnixUtilCompleters.dll'
     "PSUnixUtilCompleters/bin/$Configuration/${script:Framework}/PSUnixUtilCompleters.pdb" = 'PSUnixUtilCompleters.pdb'

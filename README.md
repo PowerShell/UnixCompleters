@@ -21,8 +21,18 @@ Import-Module PSUnixUtilCompleters
 This will register argument completers for all native commands
 found in the usual Unix util directories.
 
+Given the nature of native completion results,
+you may find this works best with PSReadLine's MenuComplete mode:
+
+```powershell
+Import-Module PSUnixUtilCompleters
+
+Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete
+```
+
 Note that this module currently exports no commands,
-so will never be autoloaded.
+so will never be autoloaded;
+you must load the module with `Import-Module` into your session to get completions.
 
 ## Further configuration
 

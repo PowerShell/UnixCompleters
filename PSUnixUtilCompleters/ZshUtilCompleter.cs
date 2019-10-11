@@ -9,20 +9,34 @@ using System.Text;
 
 namespace PSUnixUtilCompleters
 {
-    public static class ZshUtilCompletion
+    public class ZshUtilCompleter : IUnixUtilCompleter
     {
-        private static string s_completionScriptPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "zcomplete.sh");
+        private static readonly string s_completionScriptPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "zcomplete.sh");
 
-        public static IEnumerable<CompletionResult> CompleteCommand(
-            string zshPath,
+        private readonly string _zshPath;
+
+        private readonly HashSet<string> _seenCompletions;
+
+        public ZshUtilCompleter(string zshPath)
+        {
+            _zshPath = zshPath;
+            _seenCompletions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        public IEnumerable<string> FindCompletableCommands()
+        {
+            return UnixHelpers.NativeUtilNames;
+        }
+
+        public IEnumerable<CompletionResult> CompleteCommand(
             string command,
             string wordToComplete,
             CommandAst commandAst,
             int cursorPosition)
         {
             string zshArgs = CreateZshCompletionArgs(command, wordToComplete, commandAst, cursorPosition - commandAst.Extent.StartOffset);
-            var seenCompletions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (string result in InvokeWithZsh(zshPath, zshArgs).Split('\n'))
+            _seenCompletions.Clear();
+            foreach (string result in InvokeWithZsh(zshArgs).Split('\n'))
             {
                 int spaceIndex = result.IndexOf(' ');
 
@@ -35,7 +49,7 @@ namespace PSUnixUtilCompleters
                 string listItemText = completionText;
 
                 // Deal with case sensitivity
-                while (!seenCompletions.Add(listItemText))
+                while (!_seenCompletions.Add(listItemText))
                 {
                     listItemText += " ";
                 }
@@ -45,6 +59,20 @@ namespace PSUnixUtilCompleters
                     listItemText,
                     CompletionResultType.ParameterName,
                     completionText);
+            }
+        }
+
+        private string InvokeWithZsh(string arguments)
+        {
+            using (var zshProc = new Process())
+            {
+                zshProc.StartInfo.RedirectStandardOutput = true;
+                zshProc.StartInfo.FileName = this._zshPath;
+                zshProc.StartInfo.Arguments = arguments;
+
+                zshProc.Start();
+
+                return zshProc.StandardOutput.ReadToEnd();
             }
         }
 
@@ -58,20 +86,6 @@ namespace PSUnixUtilCompleters
                 .Append('"').Append(s_completionScriptPath).Append("\" ")
                 .Append('"').Append(commandAst.Extent.Text.Substring(0, cursorPosition).Replace("\"", "\"\"\"")).Append('"')
                 .ToString();
-        }
-
-        private static string InvokeWithZsh(string zshPath, string arguments)
-        {
-            using (var zshProc = new Process())
-            {
-                zshProc.StartInfo.RedirectStandardOutput = true;
-                zshProc.StartInfo.FileName = zshPath;
-                zshProc.StartInfo.Arguments = arguments;
-
-                zshProc.Start();
-
-                return zshProc.StandardOutput.ReadToEnd();
-            }
         }
     }
 }

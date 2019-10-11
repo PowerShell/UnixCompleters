@@ -2,15 +2,16 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Language;
+using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace PSUnixUtilCompleters
 {
-    public class BashUtilCompleterCache
+    public class BashUtilCompleter : IUnixUtilCompleter
     {
 
         private static readonly string s_resolveCompleterCommandTemplate = string.Join("; ", new []
@@ -20,16 +21,28 @@ namespace PSUnixUtilCompleters
             "complete -p {0} 2>/dev/null | sed -E 's/^complete.*-F ([^ ]+).*$/\\1/'\""
         });
 
-        private static readonly ConcurrentDictionary<string, string> s_commandCompletionFunctions = new ConcurrentDictionary<string, string>();
+        private readonly Dictionary<string, string> _commandCompletionFunctions;
 
-        public static IEnumerable<CompletionResult> CompleteCommand(
-            string bashPath,
+        private readonly string _bashPath;
+
+        public BashUtilCompleter(string bashPath)
+        {
+            _bashPath = bashPath;
+            _commandCompletionFunctions = new Dictionary<string, string>();
+        }
+
+        public IEnumerable<string> FindCompletableCommands()
+        {
+            return UnixHelpers.NativeUtilNames;
+        }
+
+        public IEnumerable<CompletionResult> CompleteCommand(
             string command,
             string wordToComplete,
             CommandAst commandAst,
             int cursorPosition)
         {
-            string completerFunction = ResolveCommandCompleterFunction(bashPath, command);
+            string completerFunction = ResolveCommandCompleterFunction(command);
 
             int cursorWordIndex = 0;
             string previousWord = commandAst.CommandElements[0].Extent.Text;
@@ -92,7 +105,7 @@ namespace PSUnixUtilCompleters
                 wordToComplete,
                 previousWord);
 
-            List<string> completionResults = InvokeBashWithArguments(bashPath, completionCommand)
+            List<string> completionResults = InvokeBashWithArguments(completionCommand)
                 .Split('\n')
                 .Distinct(StringComparer.Ordinal)
                 .ToList();
@@ -137,6 +150,40 @@ namespace PSUnixUtilCompleters
             }
         }
 
+        private string ResolveCommandCompleterFunction(string commandName)
+        {
+            if (string.IsNullOrEmpty(commandName))
+            {
+                throw new ArgumentException(nameof(commandName));
+            }
+
+            string completerFunction;
+            if (_commandCompletionFunctions.TryGetValue(commandName, out completerFunction))
+            {
+                return completerFunction;
+            }
+
+            string resolveCompleterInvocation = string.Format(s_resolveCompleterCommandTemplate, commandName);
+            completerFunction = InvokeBashWithArguments(resolveCompleterInvocation).Trim();
+            _commandCompletionFunctions[commandName] = completerFunction;
+
+            return completerFunction;
+        }
+
+        private string InvokeBashWithArguments(string argumentString)
+        {
+            using (var bashProc = new Process())
+            {
+                bashProc.StartInfo.FileName = this._bashPath;
+                bashProc.StartInfo.Arguments = argumentString;
+                bashProc.StartInfo.UseShellExecute = false;
+                bashProc.StartInfo.RedirectStandardOutput = true;
+                bashProc.Start();
+
+                return bashProc.StandardOutput.ReadToEnd();
+            }
+        }
+
         private static string EscapeCompletionResult(string completionResult)
         {
             completionResult = completionResult.Trim();
@@ -149,39 +196,6 @@ namespace PSUnixUtilCompleters
             return "'" + completionResult.Replace("'", "''") + "'";
         }
 
-        public static string ResolveCommandCompleterFunction(string bashPath, string commandName)
-        {
-            if (string.IsNullOrEmpty(commandName))
-            {
-                throw new ArgumentException(nameof(commandName));
-            }
-
-            return s_commandCompletionFunctions.GetOrAdd(commandName, new Lazy<string>(() => {
-                string resolveCompleterInvocation = string.Format(s_resolveCompleterCommandTemplate, commandName);
-                string completerFunction = InvokeBashWithArguments(bashPath, resolveCompleterInvocation).Trim();
-
-                if (string.IsNullOrEmpty(completerFunction) || completerFunction.StartsWith("complete"))
-                {
-                    completerFunction = "_minimal";
-                }
-
-                return completerFunction;
-            }).Value);
-        }
-
-        private static string InvokeBashWithArguments(string bashPath, string argumentString)
-        {
-            using (var bashProc = new Process())
-            {
-                bashProc.StartInfo.FileName = bashPath;
-                bashProc.StartInfo.Arguments = argumentString;
-                bashProc.StartInfo.UseShellExecute = false;
-                bashProc.StartInfo.RedirectStandardOutput = true;
-                bashProc.Start();
-
-                return bashProc.StandardOutput.ReadToEnd();
-            }
-        }
 
         private static string BuildCompWordsBashArrayString(
             string line,

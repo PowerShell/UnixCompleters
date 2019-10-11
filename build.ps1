@@ -9,14 +9,16 @@ param(
     $Clean
 )
 
+$ErrorActionPreference = 'Stop'
+
 $script:ModuleName = 'PSUnixUtilCompleters'
 $script:OutDir = "$PSScriptRoot/out"
 $script:OutModuleDir = "$script:OutDir/$script:ModuleName"
 $script:SrcDir = "$PSScriptRoot/PSUnixUtilCompleters"
 $script:Framework = 'netstandard2.0'
+$script:ZshCompleterScriptLocation = "$script:OutModuleDir/zcomplete.sh"
 
 $script:Artifacts = @{
-    "zcomplete.sh" = "zcomplete.sh"
     "${script:ModuleName}.psd1" = "${script:ModuleName}.psd1"
     "PSUnixUtilCompleters/bin/$Configuration/${script:Framework}/PSUnixUtilCompleters.dll" = 'PSUnixUtilCompleters.dll'
     "PSUnixUtilCompleters/bin/$Configuration/${script:Framework}/PSUnixUtilCompleters.pdb" = 'PSUnixUtilCompleters.pdb'
@@ -78,3 +80,6 @@ foreach ($artifactEntry in $script:Artifacts.GetEnumerator())
 {
     Copy-Item -Path $artifactEntry.Key -Destination (Join-Path $script:OutModuleDir $artifactEntry.Value) -ErrorAction Stop
 }
+
+# We need the zsh completer script to drive zsh completions
+Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/Valodim/zsh-capture-completion/master/capture.zsh' -OutFile $script:ZshCompleterScriptLocation

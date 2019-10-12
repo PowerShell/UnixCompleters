@@ -30,7 +30,7 @@ CompanyName = ''
 Copyright = '© Robert Holt'
 
 # Description of the functionality provided by this module
-# Description = ''
+Description = 'Get parameter completion for native Unix utilities. Requires zsh or bash.'
 
 # Minimum version of the PowerShell engine required by this module
 PowerShellVersion = '6.0'

@@ -38,14 +38,20 @@ namespace PSUnixUtilCompleters
             _seenCompletions.Clear();
             foreach (string result in InvokeWithZsh(zshArgs).Split('\n'))
             {
-                int spaceIndex = result.IndexOf(' ');
-
-                if (spaceIndex < 0 || spaceIndex >= result.Length)
+                // The completer script sometimes has a bug
+                // where it returns odd strings with VT100 escapes in it,
+                // so just filter those out.
+                if (string.IsNullOrEmpty(result) || result.Contains("\u001B["))
                 {
                     continue;
                 }
 
-                string completionText = result.Substring(0, spaceIndex);
+                int spaceIndex = result.IndexOf(' ');
+
+                string completionText = spaceIndex < 0
+                    ? result.Trim()
+                    : result.Substring(0, spaceIndex);
+
                 string listItemText = completionText;
 
                 // Deal with case sensitivity
@@ -82,9 +88,23 @@ namespace PSUnixUtilCompleters
             CommandAst commandAst,
             int cursorPosition)
         {
+            string completionText;
+            if (cursorPosition == commandAst.Extent.Text.Length)
+            {
+                completionText = commandAst.Extent.Text;
+            }
+            else if (cursorPosition > commandAst.Extent.Text.Length)
+            {
+                completionText = commandAst.Extent.Text + " ";
+            }
+            else
+            {
+                completionText = commandAst.Extent.Text.Substring(0, cursorPosition);
+            }
+
             return new StringBuilder(s_completionScriptPath.Length + commandAst.Extent.Text.Length)
                 .Append('"').Append(s_completionScriptPath).Append("\" ")
-                .Append('"').Append(commandAst.Extent.Text.Substring(0, cursorPosition).Replace("\"", "\"\"\"")).Append('"')
+                .Append('"').Append(completionText.Replace("\"", "\"\"\"")).Append('"')
                 .ToString();
         }
     }

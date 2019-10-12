@@ -79,20 +79,40 @@ namespace PSUnixUtilCompleters
                 }
             }
 
-            string commandLine = "'" + commandAst.Extent.Text + "'";
+            string commandLine;
             string bashWordArray;
 
-            // Handle a case like '/mnt/c/Program Files'/<TAB> where the slash is outside the string
-            IScriptExtent currentExtent = commandAst.CommandElements[cursorWordIndex].Extent;      // The presumed slash-prefixed string
-            IScriptExtent previousExtent = commandAst.CommandElements[cursorWordIndex - 1].Extent; // The string argument
-            if (currentExtent.Text.StartsWith("/") && currentExtent.StartColumnNumber == previousExtent.EndColumnNumber)
+            if (cursorWordIndex > 0)
             {
-                commandLine = commandLine.Replace(previousExtent.Text + currentExtent.Text, wordToComplete);
-                bashWordArray = BuildCompWordsBashArrayString(commandAst.Extent.Text, replaceAt: cursorPosition, replacementWord: wordToComplete);
+                commandLine = "'" + commandAst.Extent.Text + "'";
+
+                // Handle a case like '/mnt/c/Program Files'/<TAB> where the slash is outside the string
+                IScriptExtent currentExtent = commandAst.CommandElements[cursorWordIndex].Extent;      // The presumed slash-prefixed string
+                IScriptExtent previousExtent = commandAst.CommandElements[cursorWordIndex - 1].Extent; // The string argument
+                if (currentExtent.Text.StartsWith("/") && currentExtent.StartColumnNumber == previousExtent.EndColumnNumber)
+                {
+                    commandLine = commandLine.Replace(previousExtent.Text + currentExtent.Text, wordToComplete);
+                    bashWordArray = BuildCompWordsBashArrayString(commandAst.Extent.Text, replaceAt: cursorPosition, replacementWord: wordToComplete);
+                }
+                else
+                {
+                    bashWordArray = BuildCompWordsBashArrayString(commandAst.Extent.Text);
+                }
+            }
+            else if (cursorPosition > commandAst.Extent.Text.Length)
+            {
+                cursorWordIndex++;
+                commandLine = "'" + commandAst.Extent.Text + " '";
+                bashWordArray = new StringBuilder(64)
+                    .Append("('").Append(commandAst.Extent.Text).Append("' '')")
+                    .ToString();
             }
             else
             {
-                bashWordArray = BuildCompWordsBashArrayString(commandAst.Extent.Text);
+                commandLine = "'" + commandAst.Extent.Text + "'";
+                bashWordArray = new StringBuilder(32)
+                    .Append("('").Append(wordToComplete).Append("')")
+                    .ToString();
             }
 
             string completionCommand = BuildCompletionCommand(

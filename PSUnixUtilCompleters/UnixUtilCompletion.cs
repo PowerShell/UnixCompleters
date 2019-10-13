@@ -28,7 +28,7 @@ namespace PSUnixUtilCompleters
             return s_unixCompleter.CompleteCommand(command, wordToComplete, commandAst, cursorPosition);
         }
 
-        internal static void SetCompleter(IUnixUtilCompleter completer)
+        public static void SetCompleter(IUnixUtilCompleter completer)
         {
             s_unixCompleter = completer;
         }

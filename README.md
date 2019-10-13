@@ -51,6 +51,16 @@ Import-Module PSUnixUtilCompleters
 Note that you must do this before you load the module,
 and that setting it after loading will have no effect.
 
+If you want to change the completer after loading,
+you can do so from PowerShell like so:
+
+```powershell
+$zshCompleter = [PSUnixUtilCompleters.ZshUtilCompleter]::new("/bin/zsh")
+[PSUnixUtilCompleters.UnixUtilCompletion]::SetCompleter($zshCompleter)
+```
+
+You can even write your own utility completer by implementing `IUnixUtilCompleter`.
+
 ## Building the module yourself
 
 PSUnixUtilCompleters comes with a PowerShell build script,

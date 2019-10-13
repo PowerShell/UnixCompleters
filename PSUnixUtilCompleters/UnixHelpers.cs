@@ -17,7 +17,7 @@ namespace PSUnixUtilCompleters
             "/bin"
         };
 
-        private readonly static Lazy<IReadOnlyList<string>> s_nativeUtilNamesLazy = 
+        private readonly static Lazy<IReadOnlyList<string>> s_nativeUtilNamesLazy =
             new Lazy<IReadOnlyList<string>>(GetNativeUtilNames);
 
         internal static IReadOnlyList<string> NativeUtilDirs => s_nativeUtilDirs;
@@ -29,11 +29,14 @@ namespace PSUnixUtilCompleters
             var commandSet = new HashSet<string>(StringComparer.Ordinal);
             foreach (string utilDir in s_nativeUtilDirs)
             {
-                foreach (string utilPath in Directory.GetFiles(utilDir))
+                if (Directory.Exists(utilDir))
                 {
-                    if (IsExecutable(utilPath))
+                    foreach (string utilPath in Directory.GetFiles(utilDir))
                     {
-                        commandSet.Add(Path.GetFileName(utilPath));
+                        if (IsExecutable(utilPath))
+                        {
+                            commandSet.Add(Path.GetFileName(utilPath));
+                        }
                     }
                 }
             }

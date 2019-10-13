@@ -33,6 +33,7 @@ $script:Artifacts = @{
     "${script:ModuleName}.psd1" = "${script:ModuleName}.psd1"
     "PSUnixUtilCompleters/bin/$Configuration/${script:Framework}/PSUnixUtilCompleters.dll" = 'PSUnixUtilCompleters.dll'
     "PSUnixUtilCompleters/bin/$Configuration/${script:Framework}/PSUnixUtilCompleters.pdb" = 'PSUnixUtilCompleters.pdb'
+    "LICENSE" = "LICENSE.txt"
 }
 
 function Exec([scriptblock]$sb, [switch]$IgnoreExitcode)

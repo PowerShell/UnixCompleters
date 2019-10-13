@@ -98,7 +98,7 @@ PrivateData = @{
         # Tags = @()
 
         # A URL to the license for this module.
-        # LicenseUri = ''
+        LicenseUri = 'https://raw.githubusercontent.com/rjmholt/PSUnixUtilCompleters/master/LICENSE'
 
         # A URL to the main website for this project.
         ProjectUri = 'https://github.com/rjmholt/PSUnixUtilCompleters'

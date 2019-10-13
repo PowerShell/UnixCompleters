@@ -73,6 +73,7 @@ namespace PSUnixUtilCompleters
             using (var zshProc = new Process())
             {
                 zshProc.StartInfo.RedirectStandardOutput = true;
+                zshProc.StartInfo.RedirectStandardError = true;
                 zshProc.StartInfo.FileName = this._zshPath;
                 zshProc.StartInfo.Arguments = arguments;
 
@@ -104,7 +105,7 @@ namespace PSUnixUtilCompleters
 
             return new StringBuilder(s_completionScriptPath.Length + commandAst.Extent.Text.Length)
                 .Append('"').Append(s_completionScriptPath).Append("\" ")
-                .Append('"').Append(completionText.Replace("\"", "\"\"\"")).Append('"')
+                .Append('"').Append(completionText.Replace("\"", "\"\"\"")).Append("\"")
                 .ToString();
         }
     }

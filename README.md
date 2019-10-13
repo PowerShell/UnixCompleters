@@ -5,6 +5,8 @@ PowerShell parameter completers for native commands on Linux and macOS.
 This module uses completers supplied in traditional Unix shells
 to complete native utility parameters in PowerShell.
 
+![Completions with apt example](completions.gif)
+
 Currently, this module supports completions from zsh and bash.
 By default it will look for zsh and then bash to run completions
 (since zsh's completions seem to be generally better).

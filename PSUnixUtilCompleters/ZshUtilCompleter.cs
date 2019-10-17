@@ -38,19 +38,10 @@ namespace PSUnixUtilCompleters
             _seenCompletions.Clear();
             foreach (string result in InvokeWithZsh(zshArgs).Split('\n'))
             {
-                // The completer script sometimes has a bug
-                // where it returns odd strings with VT100 escapes in it,
-                // so just filter those out.
-                if (string.IsNullOrEmpty(result) || result.Contains("\u001B["))
+                if (!TryGetCompletionFromResult(result, out string completionText, out string toolTip))
                 {
                     continue;
                 }
-
-                int spaceIndex = result.IndexOf(' ');
-
-                string completionText = spaceIndex < 0
-                    ? result.Trim()
-                    : result.Substring(0, spaceIndex);
 
                 string listItemText = completionText;
 
@@ -64,8 +55,39 @@ namespace PSUnixUtilCompleters
                     completionText,
                     listItemText,
                     CompletionResultType.ParameterName,
-                    completionText);
+                    toolTip);
             }
+        }
+
+        private bool TryGetCompletionFromResult(string result, out string completionText, out string toolTip)
+        {
+            // The completer script sometimes has a bug
+            // where it returns odd strings with VT100 escapes in it,
+            // so just filter those out.
+            if (string.IsNullOrEmpty(result) || result.Contains("\u001B["))
+            {
+                completionText = null;
+                toolTip = null;
+                return false;
+            }
+
+            int spaceIndex = result.IndexOf(' ');
+
+            if (spaceIndex < 0)
+            {
+                completionText = result.Trim();
+                toolTip = completionText;
+                return true;
+            }
+
+            completionText = result.Substring(0, spaceIndex);
+
+            int dashIndex = result.IndexOf("-- ", spaceIndex);
+
+            toolTip = dashIndex < spaceIndex
+                ? completionText
+                : result.Substring(spaceIndex + 3);
+            return true;
         }
 
         private string InvokeWithZsh(string arguments)

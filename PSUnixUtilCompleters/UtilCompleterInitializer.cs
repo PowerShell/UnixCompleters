@@ -10,6 +10,40 @@ using System.Threading;
 
 namespace PSUnixUtilCompleters
 {
+    internal static class CompleterGlobals
+    {
+        private readonly static PropertyInfo s_executionContextProperty = typeof(Runspace).GetProperty("ExecutionContext", BindingFlags.NonPublic | BindingFlags.Instance);
+
+        private readonly static PropertyInfo s_nativeArgumentCompletersProperty = s_executionContextProperty.PropertyType.GetProperty("NativeArgumentCompleters", BindingFlags.NonPublic | BindingFlags.Instance);
+
+        private static Dictionary<string, ScriptBlock> s_nativeArgumentCompleterTable;
+
+        internal static IEnumerable<string> CompletedCommands { get; set; }
+
+        internal static Dictionary<string, ScriptBlock> NativeArgumentCompleterTable
+        {
+            get
+            {
+                if (s_nativeArgumentCompleterTable == null)
+                {
+                    object executionContext = s_executionContextProperty.GetValue(Runspace.DefaultRunspace);
+                    
+                    var completerTable = (Dictionary<string, ScriptBlock>)s_nativeArgumentCompletersProperty.GetValue(executionContext);
+
+                    if (completerTable == null)
+                    {
+                        completerTable = new Dictionary<string, ScriptBlock>(StringComparer.OrdinalIgnoreCase);
+                        s_nativeArgumentCompletersProperty.SetValue(executionContext, completerTable);
+                    }
+
+                    s_nativeArgumentCompleterTable = completerTable;
+                }
+
+                return s_nativeArgumentCompleterTable;
+            }
+        }
+    }
+
     public class UtilCompleterInitializer : IModuleAssemblyInitializer
     {
         private enum ShellType
@@ -26,10 +60,6 @@ namespace PSUnixUtilCompleters
             { "zsh", ShellType.Zsh },
             { "bash", ShellType.Bash },
         };
-
-        private readonly static PropertyInfo s_executionContext = typeof(Runspace).GetProperty("ExecutionContext", BindingFlags.NonPublic | BindingFlags.Instance);
-
-        private readonly static PropertyInfo s_nativeArgumentCompleters = s_executionContext.PropertyType.GetProperty("NativeArgumentCompleters", BindingFlags.NonPublic | BindingFlags.Instance);
 
         public void OnImport()
         {
@@ -62,6 +92,8 @@ namespace PSUnixUtilCompleters
 
             IEnumerable<string> utilsToComplete = utilCompleter.FindCompletableCommands();
 
+            CompleterGlobals.CompletedCommands = utilsToComplete;
+
             UnixUtilCompletion.SetCompleter(utilCompleter);
 
             RegisterCompletersForCommands(utilsToComplete);
@@ -69,18 +101,9 @@ namespace PSUnixUtilCompleters
 
         private void RegisterCompletersForCommands(IEnumerable<string> commands)
         {
-            object executionContext = s_executionContext.GetValue(Runspace.DefaultRunspace);
-
-            var nativeArgumentCompleters = (Dictionary<string, ScriptBlock>)s_nativeArgumentCompleters.GetValue(executionContext);
-            if (nativeArgumentCompleters == null)
-            {
-                s_nativeArgumentCompleters.SetValue(executionContext, new Dictionary<string, ScriptBlock>());
-                nativeArgumentCompleters = (Dictionary<string, ScriptBlock>)s_nativeArgumentCompleters.GetValue(executionContext);
-            }
-
             foreach (string command in commands)
             {
-                nativeArgumentCompleters[command] = UnixUtilCompletion.CreateInvocationScriptBlock(command);
+                CompleterGlobals.NativeArgumentCompleterTable[command] = UnixUtilCompletion.CreateInvocationScriptBlock(command);
             }
         }
 
@@ -152,6 +175,17 @@ namespace PSUnixUtilCompleters
                 pwsh.AddCommand("Write-Error")
                     .AddParameter("Message", errorMessage)
                     .Invoke();
+            }
+        }
+    }
+
+    public class UtilCompleterCleanup : IModuleAssemblyCleanup
+    {
+        public void OnRemove(PSModuleInfo psModuleInfo)
+        {
+            foreach (string completedCommand in CompleterGlobals.CompletedCommands)
+            {
+                CompleterGlobals.NativeArgumentCompleterTable.Remove(completedCommand);
             }
         }
     }

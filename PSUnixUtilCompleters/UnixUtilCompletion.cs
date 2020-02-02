@@ -11,26 +11,18 @@ namespace PSUnixUtilCompleters
     {
         private static string s_fullTypeName = typeof(UnixUtilCompletion).FullName;
 
-        [ThreadStatic]
-        internal static IUnixUtilCompleter s_unixCompleter;
-
         public static IEnumerable<CompletionResult> CompleteCommand(
             string command,
             string wordToComplete,
             CommandAst commandAst,
             int cursorPosition)
         {
-            if (s_unixCompleter == null)
+            if (CompleterGlobals.UnixUtilCompleter == null)
             {
                 return Enumerable.Empty<CompletionResult>();
             }
 
-            return s_unixCompleter.CompleteCommand(command, wordToComplete, commandAst, cursorPosition);
-        }
-
-        public static void SetCompleter(IUnixUtilCompleter completer)
-        {
-            s_unixCompleter = completer;
+            return CompleterGlobals.UnixUtilCompleter.CompleteCommand(command, wordToComplete, commandAst, cursorPosition);
         }
 
         internal static ScriptBlock CreateInvocationScriptBlock(string command)

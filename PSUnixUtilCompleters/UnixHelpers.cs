@@ -17,12 +17,80 @@ namespace PSUnixUtilCompleters
             "/bin"
         };
 
+        private readonly static IReadOnlyDictionary<string, ShellType> s_shells = new Dictionary<string, ShellType>()
+        {
+            { "zsh", ShellType.Zsh },
+            { "bash", ShellType.Bash },
+        };
+
         private readonly static Lazy<IReadOnlyList<string>> s_nativeUtilNamesLazy =
             new Lazy<IReadOnlyList<string>>(GetNativeUtilNames);
 
         internal static IReadOnlyList<string> NativeUtilDirs => s_nativeUtilDirs;
 
         internal static IReadOnlyList<string> NativeUtilNames => s_nativeUtilNamesLazy.Value;
+
+        internal static bool TryFindShell(string shellName, out string shellPath, out ShellType shellType)
+        {
+            // No shell name provided
+            if (string.IsNullOrEmpty(shellName))
+            {
+                shellPath = null;
+                shellType = ShellType.None;
+                return false;
+            }
+
+            // Look for absolute path to a shell
+            if (Path.IsPathRooted(shellName)
+                && s_shells.TryGetValue(Path.GetFileName(shellName), out shellType)
+                && File.Exists(shellName))
+            {
+                shellPath = shellName;
+                return true;
+            }
+
+            // Now assume the shell is just a command name, and confirm we recognize it
+            if (!s_shells.TryGetValue(shellName, out shellType))
+            {
+                shellPath = null;
+                return false;
+            }
+
+            return TryFindShellByName(shellName, out shellPath);
+        }
+
+        internal static bool TryFindFallbackShell(out string foundShell, out ShellType shellType)
+        {
+            foreach (KeyValuePair<string, ShellType> shell in s_shells)
+            {
+                if (TryFindShellByName(shell.Key, out foundShell))
+                {
+                    shellType = shell.Value;
+                    return true;
+                }
+            }
+
+            foundShell = null;
+            shellType = ShellType.None;
+            return false;
+        }
+
+        private static bool TryFindShellByName(string shellName, out string foundShellPath)
+        {
+            foreach (string utilDir in UnixHelpers.NativeUtilDirs)
+            {
+                string shellPath = Path.Combine(utilDir, shellName);
+                if (File.Exists(shellPath))
+                {
+                    foundShellPath = shellPath;
+                    return true;
+                }
+            }
+
+            foundShellPath = null;
+            return false;
+        }
+
 
         private static IReadOnlyList<string> GetNativeUtilNames()
         {

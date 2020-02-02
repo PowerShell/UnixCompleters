@@ -57,7 +57,7 @@ PowerShellVersion = '6.0'
 # RequiredAssemblies = @()
 
 # Script files (.ps1) that are run in the caller's environment prior to importing this module.
-# ScriptsToProcess = @()
+ScriptsToProcess = @("OnStart.ps1")
 
 # Type files (.ps1xml) to be loaded when importing this module
 # TypesToProcess = @()
@@ -72,7 +72,11 @@ PowerShellVersion = '6.0'
 FunctionsToExport = @()
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
-CmdletsToExport = @()
+CmdletsToExport = @(
+    'Import-PSUnixUtilCompleters',
+    'Remove-PSUnixUtilCompleters',
+    'Set-PSUnixUtilCompleter'
+)
 
 # Variables to export from this module
 VariablesToExport = @()

@@ -30,6 +30,7 @@ $script:Framework = 'netstandard2.0'
 $script:ZshCompleterScriptLocation = "$script:OutModuleDir/zcomplete.sh"
 
 $script:Artifacts = @{
+    "OnStart.ps1" = "OnStart.ps1"
     "${script:ModuleName}.psd1" = "${script:ModuleName}.psd1"
     "PSUnixUtilCompleters/bin/$Configuration/${script:Framework}/PSUnixUtilCompleters.dll" = 'PSUnixUtilCompleters.dll'
     "PSUnixUtilCompleters/bin/$Configuration/${script:Framework}/PSUnixUtilCompleters.pdb" = 'PSUnixUtilCompleters.pdb'

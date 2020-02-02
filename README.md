@@ -20,6 +20,9 @@ install this module and add the following to your profile:
 Import-Module PSUnixUtilCompleters
 ```
 
+There is also an alternate command, `Import-PSUnixUtilCompleters`,
+that has the same functionality but is discoverable by command completion.
+
 This will register argument completers for all native commands
 found in the usual Unix util directories.
 
@@ -31,10 +34,6 @@ Import-Module PSUnixUtilCompleters
 
 Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete
 ```
-
-Note that this module currently exports no commands,
-so will never be autoloaded;
-you must load the module with `Import-Module` into your session to get completions.
 
 ## Further configuration
 
@@ -57,11 +56,31 @@ If you want to change the completer after loading,
 you can do so from PowerShell like so:
 
 ```powershell
-$zshCompleter = [PSUnixUtilCompleters.ZshUtilCompleter]::new("/bin/zsh")
-[PSUnixUtilCompleters.UnixUtilCompletion]::SetCompleter($zshCompleter)
+Set-PSUnixUtilCompleter -ShellType Zsh
+
+# Or if you have a shell installed to a particular path
+Set-PSUnixUtilCompleter -Shell "/bin/zsh"
+
+# You can even write your own utility completer by implementing `IUnixUtilCompleter`
+$myCompleter = [MyCompleter]::new()
+Set-PSUnixUtilCompleter -Completer $myCompleter
 ```
 
-You can even write your own utility completer by implementing `IUnixUtilCompleter`.
+## Unregistering UNIX util completions
+
+The PSUnixUtilCompleters module will unregister completers
+for all the commands it registered completers for
+when removed:
+
+```powershell
+Remove-Module PSUnixUtilCompleters
+```
+
+As with loading, there is also a convenience command provided for this:
+
+```powershell
+Remove-PSUnixUtilCompleters
+```
 
 ## Building the module yourself
 

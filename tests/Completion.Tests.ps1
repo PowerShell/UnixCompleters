@@ -1,6 +1,6 @@
-Describe 'PSUnixUtilCompleters completion tests' {
+Describe 'Microsoft.PowerShell.UnixCompleters completion tests' {
     BeforeAll {
-        Import-Module "$PSScriptRoot/../out/PSUnixUtilCompleters"
+        Import-Module "$PSScriptRoot/../out/Microsoft.PowerShell.UnixCompleters"
     }
 
     Context "Zsh completions" {

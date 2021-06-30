@@ -2,12 +2,12 @@ using System.Collections.Generic;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 
-namespace PSUnixUtilCompleters
+namespace Microsoft.PowerShell.UnixCompleters
 {
     /// <summary>
     /// Provides completions for native Unix commands.
     /// </summary>
-    public interface IUnixUtilCompleter
+    public interface IUnixCompleter
     {
         /// <summary>
         /// Gets the list of commands this completer can generate completions for.

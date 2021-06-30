@@ -22,18 +22,18 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$script:ModuleName = 'PSUnixUtilCompleters'
+$script:ModuleName = 'Microsoft.PowerShell.UnixCompleters'
 $script:OutDir = "$PSScriptRoot/out"
 $script:OutModuleDir = "$script:OutDir/$script:ModuleName"
-$script:SrcDir = "$PSScriptRoot/PSUnixUtilCompleters"
+$script:SrcDir = "$PSScriptRoot/Microsoft.PowerShell.UnixCompleters"
 $script:Framework = 'netstandard2.0'
 $script:ZshCompleterScriptLocation = "$script:OutModuleDir/zcomplete.sh"
 
 $script:Artifacts = @{
     "OnStart.ps1" = "OnStart.ps1"
     "${script:ModuleName}.psd1" = "${script:ModuleName}.psd1"
-    "PSUnixUtilCompleters/bin/$Configuration/${script:Framework}/PSUnixUtilCompleters.dll" = 'PSUnixUtilCompleters.dll'
-    "PSUnixUtilCompleters/bin/$Configuration/${script:Framework}/PSUnixUtilCompleters.pdb" = 'PSUnixUtilCompleters.pdb'
+    "Microsoft.PowerShell.UnixCompleters/bin/$Configuration/${script:Framework}/Microsoft.PowerShell.UnixCompleters.dll" = 'Microsoft.PowerShell.UnixCompleters.dll'
+    "Microsoft.PowerShell.UnixCompleters/bin/$Configuration/${script:Framework}/Microsoft.PowerShell.UnixCompleters.pdb" = 'Microsoft.PowerShell.UnixCompleters.pdb'
     "LICENSE" = "LICENSE.txt"
 }
 

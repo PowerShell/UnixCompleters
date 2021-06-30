@@ -7,9 +7,9 @@ using System.Management.Automation.Language;
 using System.Reflection;
 using System.Text;
 
-namespace PSUnixUtilCompleters
+namespace Microsoft.PowerShell.UnixCompleters
 {
-    public class ZshUtilCompleter : IUnixUtilCompleter
+    public class ZshCompleter : IUnixCompleter
     {
         private static readonly string s_completionScriptPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "zcomplete.sh");
 
@@ -17,7 +17,7 @@ namespace PSUnixUtilCompleters
 
         private readonly HashSet<string> _seenCompletions;
 
-        public ZshUtilCompleter(string zshPath)
+        public ZshCompleter(string zshPath)
         {
             _zshPath = zshPath;
             _seenCompletions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

@@ -1,14 +1,14 @@
 using System;
 using System.Management.Automation;
 
-namespace PSUnixUtilCompleters.Commands
+namespace Microsoft.PowerShell.UnixCompleters.Commands
 {
-    [Cmdlet(VerbsCommon.Set, Utils.ModulePrefix + "Completer")]
-    public class SetPSUnixUtilCompletersCompleterCommand : Cmdlet
+    [Cmdlet(VerbsCommon.Set, Utils.ModulePrefix)]
+    public class SetUnixCompleterCommand : Cmdlet
     {
         [ValidateNotNull()]
         [Parameter(Position = 0, Mandatory = true, ParameterSetName = "Completer")]
-        public IUnixUtilCompleter Completer { get; set; }
+        public IUnixCompleter Completer { get; set; }
 
         [ValidateNotNullOrEmpty()]
         [Parameter(Position = 0, Mandatory = true, ParameterSetName = "Shell")]
@@ -46,11 +46,11 @@ namespace PSUnixUtilCompleters.Commands
                 switch (shellType)
                 {
                     case ShellType.Zsh:
-                        Completer = new ZshUtilCompleter(shellPath);
+                        Completer = new ZshCompleter(shellPath);
                         break;
 
                     case ShellType.Bash:
-                        Completer = new BashUtilCompleter(shellPath);
+                        Completer = new BashCompleter(shellPath);
                         break;
 
                     default:
@@ -64,7 +64,7 @@ namespace PSUnixUtilCompleters.Commands
                 }
             }
 
-            CompleterGlobals.UnixUtilCompleter = Completer;
+            CompleterGlobals.UnixCompleter = Completer;
         }
     }
 }

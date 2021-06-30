@@ -5,7 +5,7 @@ using System.Management.Automation;
 using System.Management.Automation.Language;
 using System.Text;
 
-namespace PSUnixUtilCompleters
+namespace Microsoft.PowerShell.UnixCompleters
 {
     public static class UnixUtilCompletion
     {
@@ -17,12 +17,12 @@ namespace PSUnixUtilCompleters
             CommandAst commandAst,
             int cursorPosition)
         {
-            if (CompleterGlobals.UnixUtilCompleter == null)
+            if (CompleterGlobals.UnixCompleter == null)
             {
                 return Enumerable.Empty<CompletionResult>();
             }
 
-            return CompleterGlobals.UnixUtilCompleter.CompleteCommand(command, wordToComplete, commandAst, cursorPosition);
+            return CompleterGlobals.UnixCompleter.CompleteCommand(command, wordToComplete, commandAst, cursorPosition);
         }
 
         internal static ScriptBlock CreateInvocationScriptBlock(string command)

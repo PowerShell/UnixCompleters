@@ -1,0 +1,74 @@
+name: Build-$(System.PullRequest.PullRequestNumber)-$(Date:yyyyMMdd)$(Rev:.rr)
+trigger:
+  # Batch merge builds together while a merge build is running
+  batch: true
+  branches:
+    include:
+    - main
+pr:
+  branches:
+    include:
+    - main
+
+resources:
+  repositories:
+  - repository: ComplianceRepo
+    type: github
+    endpoint: ComplianceGHRepo
+    name: PowerShell/compliance
+
+stages:
+- stage: Build
+  displayName: Build Completers Package
+  jobs:
+  - job: BuildPkg
+    displayName: Build Package
+    pool:
+      vmImage: windows-2019
+    steps:
+    - pwsh: |
+        Install-module Pester -Force -MaximumVersion 4.99
+      displayName: Install dependencies - Pester
+      timeoutInMinutes: 10
+
+    - pwsh: |
+        Install-Module -Name "PSScriptAnalyzer" -RequiredVersion 1.20.0 -Force
+      displayName: Install PSScriptAnalyzer
+      timeoutInMinutes: 10
+
+    - pwsh: |
+        $(Build.SourcesDirectory)/build.ps1 -Build -Configuration Release
+      displayName: Build
+
+    - pwsh: |
+        Write-Verbose "BUILD_OUTPUT_PATH- $env:BUILD_OUTPUT_PATH" -Verbose
+        Write-Verbose "SIGNED_OUTPUT_PATH- $env:SIGNED_OUTPUT_PATH" -Verbose
+        Copy-Item $env:BUILD_OUTPUT_PATH $env:SIGNED_OUTPUT_PATH -Recurse -Force
+      displayName: Build Signing Placeholder
+
+- stage: Compliance
+  displayName: Compliance
+  dependsOn: Build
+  jobs:
+  - job: ComplianceJob
+    pool:
+      vmImage: Windows-latest
+    steps:
+    - checkout: self
+    - checkout: ComplianceRepo
+    - template: ci-compliance.yml@ComplianceRepo
+
+- stage: Test
+  displayName: Test Package
+  jobs:
+  - template: test.yml
+    parameters:
+      jobName: TestPkgUbuntu18
+      displayName: PowerShell Core on Ubuntu 18.04
+      imageName: ubuntu-18.04
+
+  - template: test.yml
+    parameters:
+      jobName: TestPkgWinMacOS
+      displayName: PowerShell Core on macOS
+      imageName: macOS-10.14

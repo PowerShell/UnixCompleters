@@ -11,6 +11,14 @@ param(
     [switch]
     $Clean,
 
+    [Parameter(ParameterSetName = 'Package')]
+    [switch]
+    $Package,
+
+    [Parameter(ParameterSetName = 'Package')]
+    [switch]
+    $Signed,
+
     [Parameter(ParameterSetName = 'Test')]
     [switch]
     $Build,
@@ -23,18 +31,22 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $script:ModuleName = 'PSUnixUtilCompleters'
-$script:OutDir = "$PSScriptRoot/out"
-$script:OutModuleDir = "$script:OutDir/$script:ModuleName"
+$script:ModuleVersion = (Import-PowerShellDataFile -Path "${PSScriptRoot}/${ModuleName}.psd1").ModuleVersion
+$script:OutDir = "${PSScriptRoot}/out"
+$script:ModuleBase = "${PSScriptRoot}/out/${script:ModuleName}"
+$script:OutModuleDir = "${ModuleBase}/${script:ModuleVersion}"
 $script:SrcDir = "$PSScriptRoot/PSUnixUtilCompleters"
-$script:Framework = 'netstandard2.0'
-$script:ZshCompleterScriptLocation = "$script:OutModuleDir/zcomplete.sh"
+$script:Framework = 'netstandard2.1'
+$script:ZshCompleterScriptLocation = "${script:OutModuleDir}/zcomplete.sh"
 
 $script:Artifacts = @{
     "OnStart.ps1" = "OnStart.ps1"
     "${script:ModuleName}.psd1" = "${script:ModuleName}.psd1"
     "PSUnixUtilCompleters/bin/$Configuration/${script:Framework}/PSUnixUtilCompleters.dll" = 'PSUnixUtilCompleters.dll'
-    "PSUnixUtilCompleters/bin/$Configuration/${script:Framework}/PSUnixUtilCompleters.pdb" = 'PSUnixUtilCompleters.pdb'
     "LICENSE" = "LICENSE.txt"
+}
+if ( $Configuration -eq 'Debug' ) {
+    ${script:Artifacts}["PSUnixUtilCompleters/bin/$Configuration/${script:Framework}/PSUnixUtilCompleters.pdb"] = 'PSUnixUtilCompleters.pdb'
 }
 
 function Exec([scriptblock]$sb, [switch]$IgnoreExitcode)
@@ -82,7 +94,7 @@ if ($PSCmdlet.ParameterSetName -eq 'Build' -or $Build)
     Push-Location $script:SrcDir
     try
     {
-        Exec { dotnet build }
+        Exec { dotnet build --configuration $Configuration }
     }
     finally
     {
@@ -100,9 +112,30 @@ if ($PSCmdlet.ParameterSetName -eq 'Build' -or $Build)
     Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/Valodim/zsh-capture-completion/master/capture.zsh' -OutFile $script:ZshCompleterScriptLocation
 }
 
-if ($Test)
-{
+if ($Test) {
     $pwsh = (Get-Process -Id $PID).Path
     $testPath = "$PSScriptRoot/tests"
-    & $pwsh -c "Invoke-Pester '$testPath'"
+    & $pwsh -noprofile -c "Import-Module Pester -Max 4.99.99; Invoke-Pester '$testPath'"
+}
+
+# if we're signed, the files must be in 'signed' rather than 'out' directory
+if ($Package) {
+    $packagePath = "$PSScriptRoot/packages"
+    $repoName = [guid]::NewGuid().ToString("N")
+    if ( $Signed ) {
+        $moduleLocation = "$psScriptRoot/signed/${script:ModuleName}/${script:ModuleVersion}"
+    }
+    else {
+        $moduleLocation = ${script:ModuleBase}
+    }
+    if (-not (Test-Path $packagePath)) {
+        $null = New-Item -ItemType Directory -Path $packagePath
+    }
+    try {
+        Register-PSRepository -Name $repoName -SourceLocation $packagePath -PublishLocation $packagePath -InstallationPolicy Trusted
+        Publish-Module -Path "${moduleLocation}" -Repository $repoName
+    }
+    finally {
+        Unregister-PSRepository -Name $repoName
+    }
 }

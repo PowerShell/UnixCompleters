@@ -41,7 +41,7 @@ stages:
 
     - pwsh: |
         $sourceName = [guid]::newguid().ToString("N")
-        $moduleName = "PSUnixCompleters"
+        $moduleName = "PSUnixUtilCompleters"
         try {
           Register-PSRepository -Name $sourceName -SourceLocation '$(System.ArtifactsDirectory)' -ErrorAction Ignore
           Publish-Module -Repository $sourceName -Path "$(Build.SourcesDirectory)/signed/${moduleName}"

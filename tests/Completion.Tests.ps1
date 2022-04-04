@@ -1,20 +1,60 @@
 Describe 'PSUnixUtilCompleters completion tests' {
     BeforeAll {
         Import-Module "$PSScriptRoot/../out/PSUnixUtilCompleters"
+        $zsh = Get-Command -ErrorAction Ignore zsh
+        $bsh = Get-Command -ErrorAction Ignore /bin/bash
+        $skipZsh = $null -eq $zsh ? $true : $false
+        $skipBsh = $null -eq $bsh ? $true : $false
+        if ( $skipZsh ) { $zsh = Get-Command Write-OutPut }
+        if ( $skipBsh ) { $bsh = Get-Command Write-Output }
+    }
+
+    Context "Script Analyzer" {
+        It "There should be no script analyzer violations" {
+            $result = Invoke-ScriptAnalyzer -Recurse -Path "$PSScriptRoot/.."
+            $result | Should -BeNullOrEmpty
+        }
+    }
+
+    Context "Bash completions" {
+        BeforeAll {
+            $bcomp = "$PSScriptRoot/bash-completer"
+            [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "")]
+            $completionTestCases = @(
+                @{ InStr = 'gzip --'; CursorPos = 7; Suggestions = (& $bsh -c "$bcomp /usr/local/etc/bash_completion 'gzip --'") }
+                @{ InStr = 'dd i'; CursorPos = 4; Suggestions = (& $bsh -c "$bcomp  /usr/local/etc/bash_completion 'dd i'") }
+            )
+            Set-PSUnixUtilCompleter -ShellType Bash -CompletionScript /usr/local/etc/bash_completion
+        }
+
+        It "Completes '<inStr>' correctly" -TestCases $completionTestCases -skip:$skipBsh {
+            param($InStr, $CursorPos, $Suggestions)
+
+            $result = TabExpansion2 -inputScript $InStr -cursorColumn $CursorPos
+
+            foreach ($s in $Suggestions)
+            {
+                $result.CompletionMatches.CompletionText | Should -Contain $s
+            }
+        }
     }
 
     Context "Zsh completions" {
         BeforeAll {
+            $moduleVersion = (Get-Module PSUnixUtilCompleters).Version.ToString()
+            $zcomp = "$PSScriptRoot/../out/PSUnixUtilCompleters/${moduleVersion}/zcomplete.sh"
+            [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "")]
             $completionTestCases = @(
-                @{ InStr = 'ls -a'; CursorPos = 5; Suggestions = @('-aA', '-ad', '-aL', '-aR', '-ah', '-ai', '-al', '-ag', '-a1', '-aC', '-am', '-ax', '-as', '-ac', '-au', '-ar', '-at', '-aF', '-ap', '-an', '-ab', '-aq', '-ak', '-aS', '-aT', '-ao', '-af', '-aw', '-aB', '-aG', '-aH', '-aP') }
-                @{ InStr = 'grep --'; CursorPos = 7; Suggestions = @('--include', '--exclude', '--exclude-from', '--exclude-dir') }
-                @{ InStr = 'dd i'; CursorPos = 4; Suggestions = @('if=', 'ibs=') }
-                @{ InStr = 'cat -'; CursorPos = 5; Suggestions = @('-b', '-e', '-n', '-s', '-t', '-u', '-v') }
-                @{ InStr = 'ps au'; CursorPos = 5; Suggestions = @('aue', 'aux', 'auw', 'auH', 'auL', 'auS', 'auT', 'auZ', 'auA', 'auC', 'auc', 'auh', 'aum', 'aur') }
+                @{ InStr = 'ls -a'; CursorPos = 5; Suggestions = (& $zsh $zcomp 'ls -a').where({"$_" -match ' -- '}).foreach({"$_".Split(' ')[0]}) }
+                @{ InStr = 'grep --'; CursorPos = 7; Suggestions = (& $zsh $zcomp 'grep --').where({"$_" -match ' -- '}).foreach({"$_".Split(' ')[0]}) }
+                @{ InStr = 'dd i'; CursorPos = 4; Suggestions = (& $zsh $zcomp 'dd i').where({"$_" -match ' -- '}).foreach({"$_".Split(' ')[0]}) }
+                @{ InStr = 'cat -'; CursorPos = 5; Suggestions = (& $zsh $zcomp 'cat -').where({"$_" -match ' -- '}).foreach({"$_".Split(' ')[0]}) }
+                @{ InStr = 'ps au'; CursorPos = 5; Suggestions = (& $zsh $zcomp 'ps au').where({"$_" -match ' -- '}).foreach({"$_".Split(' ')[0]}) }
             )
+            Set-PSUnixUtilCompleter -ShellType Zsh
         }
 
-        It "Completes '<inStr>' correctly" -TestCases $completionTestCases {
+        It "Completes '<inStr>' correctly" -TestCases $completionTestCases -skip:$skipZsh {
             param($InStr, $CursorPos, $Suggestions)
 
             $result = TabExpansion2 -inputScript $InStr -cursorColumn $CursorPos

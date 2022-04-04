@@ -56,10 +56,12 @@ namespace PSUnixUtilCompleters
     public class UtilCompleterInitializer : IModuleAssemblyInitializer
     {
         private const string SHELL_PREFERENCE_VARNAME = "COMPLETION_SHELL_PREFERENCE";
+        private const string BASH_COMPLETION_VARNAME = "BASH_COMPLETION";
 
         public void OnImport()
         {
             string preferredCompletionShell = Environment.GetEnvironmentVariable(SHELL_PREFERENCE_VARNAME);
+            string completionScript = Environment.GetEnvironmentVariable(BASH_COMPLETION_VARNAME);
 
             ShellType shellType = ShellType.None;
             string shellExePath;
@@ -74,7 +76,7 @@ namespace PSUnixUtilCompleters
             switch (shellType)
             {
                 case ShellType.Bash:
-                    utilCompleter = new BashUtilCompleter(shellExePath);
+                    utilCompleter = new BashUtilCompleter(shellExePath, completionScript);
                     break;
 
                 case ShellType.Zsh:

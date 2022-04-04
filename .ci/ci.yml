@@ -41,6 +41,9 @@ stages:
       displayName: Build
 
     - pwsh: |
+        $env:BUILD_OUTPUT_PATH = "$(Build.SourcesDirectory)/out"
+        $env:SIGNED_OUTPUT_PATH = "$(Build.SourcesDirectory)/signed"
+        (Get-Item -ea ignore "$(Build.SourcesDirectory)/signed") || (New-Item -ItemType Directory -Path "$(Build.SourcesDirectory)/signed")
         Write-Verbose "BUILD_OUTPUT_PATH- $env:BUILD_OUTPUT_PATH" -Verbose
         Write-Verbose "SIGNED_OUTPUT_PATH- $env:SIGNED_OUTPUT_PATH" -Verbose
         Copy-Item $env:BUILD_OUTPUT_PATH $env:SIGNED_OUTPUT_PATH -Recurse -Force

@@ -31,11 +31,9 @@ jobs:
   - ${{ parameters.powershellExecutable }}: |
       $sourceName = [guid]::newguid().ToString("N")
       $moduleName = "PSUnixCompleters"
-      $buildOutputPath = ${}
       try {
-        $null = New-Item -ItemType Directory -Path $buildOutputPath -Verbose
         Register-PSRepository -Name $sourceName -SourceLocation '$(System.ArtifactsDirectory)' -ErrorAction Ignore
-        Save-Module -Repository $sourceName -Name $moduleName -Path $buildOutputPath
+        Install-Module -Repository $sourceName -Name $moduleName -Scope CurrentUser
       }
       finally {
         Unregister-PSRepository -Name $sourceName -ErrorAction SilentlyContinue

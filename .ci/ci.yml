@@ -37,7 +37,7 @@ stages:
       timeoutInMinutes: 10
 
     - pwsh: |
-        $(Build.SourcesDirectory)/build.ps1 -Build -Configuration Release
+        $(Build.SourcesDirectory)/build.ps1 -Configuration Release
       displayName: Build
 
     - pwsh: |

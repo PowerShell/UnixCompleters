@@ -44,11 +44,12 @@ stages:
         $moduleName = "PSUnixCompleters"
         try {
           Register-PSRepository -Name $sourceName -SourceLocation '$(System.ArtifactsDirectory)' -ErrorAction Ignore
-          Publish-Module -Repository $sourceName -Name $moduleName -Path "$(Build.SourcesDirectory)/signed/${moduleName}"
+          Publish-Module -Repository $sourceName -Path "$(Build.SourcesDirectory)/signed/${moduleName}"
         }
         finally {
           Unregister-PSRepository -Name $sourceName -ErrorAction SilentlyContinue
         }
+      displayName: Create completer module package
 
 
 - stage: Compliance

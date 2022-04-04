@@ -1,5 +1,5 @@
 Describe 'PSUnixUtilCompleters completion tests' {
-    BeforeAll {
+    BeforeDiscovery {
         Import-Module "$PSScriptRoot/../out/PSUnixUtilCompleters"
         $zsh = Get-Command -ErrorAction Ignore zsh
         $bsh = Get-Command -ErrorAction Ignore /bin/bash
@@ -17,7 +17,7 @@ Describe 'PSUnixUtilCompleters completion tests' {
     }
 
     Context "Bash completions" {
-        BeforeAll {
+        BeforeDiscovery {
             $bcomp = "$PSScriptRoot/bash-completer"
             [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "")]
             $completionTestCases = @(
@@ -27,8 +27,8 @@ Describe 'PSUnixUtilCompleters completion tests' {
             Set-PSUnixUtilCompleter -ShellType Bash -CompletionScript /usr/local/etc/bash_completion
         }
 
-        It "Completes '<inStr>' correctly" -TestCases $completionTestCases -skip:$skipBsh {
-            param($InStr, $CursorPos, $Suggestions)
+        It "Completes <InStr> correctly" -foreach $completionTestCases -skip:$skipBsh {
+            # param($InStr, $CursorPos, $Suggestions)
 
             $result = TabExpansion2 -inputScript $InStr -cursorColumn $CursorPos
 
@@ -40,7 +40,7 @@ Describe 'PSUnixUtilCompleters completion tests' {
     }
 
     Context "Zsh completions" {
-        BeforeAll {
+        BeforeDiscovery {
             $moduleVersion = (Get-Module PSUnixUtilCompleters).Version.ToString()
             $zcomp = "$PSScriptRoot/../out/PSUnixUtilCompleters/${moduleVersion}/zcomplete.sh"
             [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "")]
@@ -54,8 +54,8 @@ Describe 'PSUnixUtilCompleters completion tests' {
             Set-PSUnixUtilCompleter -ShellType Zsh
         }
 
-        It "Completes '<inStr>' correctly" -TestCases $completionTestCases -skip:$skipZsh {
-            param($InStr, $CursorPos, $Suggestions)
+        It "Completes '<inStr>' correctly" -foreach $completionTestCases -skip:$skipZsh {
+            # param($InStr, $CursorPos, $Suggestions)
 
             $result = TabExpansion2 -inputScript $InStr -cursorColumn $CursorPos
 

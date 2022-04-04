@@ -11,7 +11,7 @@ jobs:
   displayName: ${{ parameters.displayName }}
   steps:
   - ${{ parameters.powershellExecutable }}: |
-      Install-module Pester -Force -MaximumVersion 4.99
+      Install-module Pester -Force
     displayName: Install dependencies - Pester
     timeoutInMinutes: 10
 
@@ -19,10 +19,6 @@ jobs:
         Install-Module -Name "PSScriptAnalyzer" -RequiredVersion 1.20.0 -Force
     displayName: Install dependencies
     timeoutInMinutes: 10
-
-  - ${{ parameters.powershellExecutable }}: |
-      Get-InstalledModule -Name pester  -AllVersions | Where-Object {$_.Version -ge ([version]::new(5,0,0))} | Uninstall-Module -Force
-    displayName: Remove >= 5.0.0 Pester
 
   - task: DownloadBuildArtifacts@0
     displayName: 'Download artifacts'

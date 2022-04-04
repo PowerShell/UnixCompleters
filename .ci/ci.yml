@@ -27,16 +27,6 @@ stages:
       vmImage: windows-2019
     steps:
     - pwsh: |
-        Install-module Pester -Force -MaximumVersion 4.99
-      displayName: Install dependencies - Pester
-      timeoutInMinutes: 10
-
-    - pwsh: |
-        Install-Module -Name "PSScriptAnalyzer" -RequiredVersion 1.20.0 -Force
-      displayName: Install PSScriptAnalyzer
-      timeoutInMinutes: 10
-
-    - pwsh: |
         $(Build.SourcesDirectory)/build.ps1 -Configuration Release
       displayName: Build
 
@@ -68,10 +58,10 @@ stages:
     parameters:
       jobName: TestPkgUbuntu18
       displayName: PowerShell Core on Ubuntu 18.04
-      imageName: ubuntu-18.04
+      imageName: ubuntu-latest
 
   - template: test.yml
     parameters:
       jobName: TestPkgWinMacOS
       displayName: PowerShell Core on macOS
-      imageName: macOS-10.14
+      imageName: macOS-latest

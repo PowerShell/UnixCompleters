@@ -35,7 +35,7 @@ jobs:
       try {
         Register-PSRepository -Name $repoName -SourceLocation '$(System.ArtifactsDirectory)' -ErrorAction Ignore
         New-Item -ItemType Directory out
-        Save-Module -Repository $repoName -Name $moduleName -Path out
+        Save-Module -Repository $repoName -Name $moduleName -Path out -AcceptLicense -Force
       }
       finally {
         Unregister-PSRepository -Name $repoName -ErrorAction SilentlyContinue

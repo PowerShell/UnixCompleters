@@ -18,7 +18,11 @@ Describe 'PSUnixUtilCompleters completion tests' {
 
     Context "Bash completions" {
         BeforeDiscovery {
-            if ( $skipZsh ) {
+            if ( $skipBsh ) {
+                $completionTestCases = @(
+                    @{ InStr = 'gzip --'; CursorPos = 7; Suggestions = "n/a" }
+                    @{ InStr = 'dd i';    CursorPos = 4; Suggestions = "n/a" }
+                )
                 return
             }
             if (Test-Path /etc/bash_completion) {
@@ -51,17 +55,24 @@ Describe 'PSUnixUtilCompleters completion tests' {
     Context "Zsh completions" {
         BeforeDiscovery {
             if ( $skipZsh ) {
+                $completionTestCases = @(
+                    @{ InStr = 'ls -a';   CursorPos = 5; Suggestions = "n/a" }
+                    @{ InStr = 'grep --'; CursorPos = 7; Suggestions = "n/a" }
+                    @{ InStr = 'dd i';    CursorPos = 4; Suggestions = "n/a" }
+                    @{ InStr = 'cat -';   CursorPos = 5; Suggestions = "n/a" }
+                    @{ InStr = 'ps au';   CursorPos = 5; Suggestions = "n/a" }
+                )
                 return
             }
             $moduleVersion = (Get-Module PSUnixUtilCompleters).Version.ToString()
             $zcomp = "$PSScriptRoot/../out/PSUnixUtilCompleters/${moduleVersion}/zcomplete.sh"
             [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "")]
             $completionTestCases = @(
-                @{ InStr = 'ls -a'; CursorPos = 5; Suggestions = (& $zsh $zcomp 'ls -a').where({"$_" -match ' -- '}).foreach({"$_".Split(' ')[0]}) }
+                @{ InStr = 'ls -a';   CursorPos = 5; Suggestions = (& $zsh $zcomp 'ls -a').where({"$_" -match ' -- '}).foreach({"$_".Split(' ')[0]}) }
                 @{ InStr = 'grep --'; CursorPos = 7; Suggestions = (& $zsh $zcomp 'grep --').where({"$_" -match ' -- '}).foreach({"$_".Split(' ')[0]}) }
-                @{ InStr = 'dd i'; CursorPos = 4; Suggestions = (& $zsh $zcomp 'dd i').where({"$_" -match ' -- '}).foreach({"$_".Split(' ')[0]}) }
-                @{ InStr = 'cat -'; CursorPos = 5; Suggestions = (& $zsh $zcomp 'cat -').where({"$_" -match ' -- '}).foreach({"$_".Split(' ')[0]}) }
-                @{ InStr = 'ps au'; CursorPos = 5; Suggestions = (& $zsh $zcomp 'ps au').where({"$_" -match ' -- '}).foreach({"$_".Split(' ')[0]}) }
+                @{ InStr = 'dd i';    CursorPos = 4; Suggestions = (& $zsh $zcomp 'dd i').where({"$_" -match ' -- '}).foreach({"$_".Split(' ')[0]}) }
+                @{ InStr = 'cat -';   CursorPos = 5; Suggestions = (& $zsh $zcomp 'cat -').where({"$_" -match ' -- '}).foreach({"$_".Split(' ')[0]}) }
+                @{ InStr = 'ps au';   CursorPos = 5; Suggestions = (& $zsh $zcomp 'ps au').where({"$_" -match ' -- '}).foreach({"$_".Split(' ')[0]}) }
             )
             Set-PSUnixUtilCompleter -ShellType Zsh
         }

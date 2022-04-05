@@ -22,8 +22,8 @@ jobs:
 
   - ${{ parameters.powershellExecutable }}: |
       if ( $IsLinux ) {
-        apt update -y
-        apt install -y bash
+        sudo apt update -y
+        sudo apt install -y bash
       }
       else {
         brew install bash-completion

@@ -49,6 +49,8 @@ stages:
         finally {
           Unregister-PSRepository -Name $sourceName -ErrorAction SilentlyContinue
         }
+        Get-ChildItem -rec '$(System.ArtifactsDirectory)' | Write-Verbose -Verbose
+        Get-ChildItem -rec -file | Write-Verbose -Verbose
       displayName: Create module package
 
 

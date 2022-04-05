@@ -40,14 +40,18 @@ stages:
       displayName: Build Signing Placeholder
 
     - pwsh: |
-        $sourceName = [guid]::newguid().ToString("N")
+        $repoName = [guid]::newguid().ToString("N")
         $moduleName = "PSUnixUtilCompleters"
         try {
-          Register-PSRepository -Name $sourceName -SourceLocation '$(System.ArtifactsDirectory)' -ErrorAction Ignore
-          Publish-Module -Repository $sourceName -Path "$(Build.SourcesDirectory)/signed/${moduleName}"
+          Register-PSRepository -Name $repoName -SourceLocation '$(System.ArtifactsDirectory)' -ErrorAction Ignore
+          Publish-Module -Repository $repoName -Path "$(Build.SourcesDirectory)/signed/${moduleName}"
+          $nupkg = Get-ChildItem '$(System.ArtifactsDirectory)/*.nupkg'
+          $nupkgName = $nupkg.Name
+          $nupkgPath = $nupkg.FullName
+          Write-Host "##vso[artifact.upload containerfolder=$nupkgName;artifactname=$nupkgName;]$nupkgPath"
         }
         finally {
-          Unregister-PSRepository -Name $sourceName -ErrorAction SilentlyContinue
+          Unregister-PSRepository -Name $repoName -ErrorAction SilentlyContinue
         }
         Get-ChildItem -rec '$(System.ArtifactsDirectory)' | Write-Verbose -Verbose
         Get-ChildItem -rec -file | Write-Verbose -Verbose

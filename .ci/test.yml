@@ -29,14 +29,15 @@ jobs:
       downloadPath: '$(System.ArtifactsDirectory)'
 
   - ${{ parameters.powershellExecutable }}: |
-      $sourceName = [guid]::newguid().ToString("N")
+      $repoName = [guid]::newguid().ToString("N")
       $moduleName = "PSUnixUtilCompleters"
+      Get-ChildItem -rec -file | Write-Verbose -Verbose
       try {
-        Register-PSRepository -Name $sourceName -SourceLocation '$(System.ArtifactsDirectory)' -ErrorAction Ignore
-        Install-Module -Repository $sourceName -Name $moduleName -Scope CurrentUser
+        Register-PSRepository -Name $repoName -SourceLocation '$(System.ArtifactsDirectory)' -ErrorAction Ignore
+        Install-Module -Repository $repoName -Name $moduleName -Scope CurrentUser
       }
       finally {
-        Unregister-PSRepository -Name $sourceName -ErrorAction SilentlyContinue
+        Unregister-PSRepository -Name $repoName -ErrorAction SilentlyContinue
       }
     displayName: Extract product artifact
     timeoutInMinutes: 10

@@ -34,7 +34,8 @@ jobs:
       Get-ChildItem -rec -file | Write-Verbose -Verbose
       try {
         Register-PSRepository -Name $repoName -SourceLocation '$(System.ArtifactsDirectory)' -ErrorAction Ignore
-        Install-Module -Repository $repoName -Name $moduleName -Scope CurrentUser
+        New-Item -ItemType Directory out
+        Save-Module -Repository $repoName -Name $moduleName -Path out
       }
       finally {
         Unregister-PSRepository -Name $repoName -ErrorAction SilentlyContinue
@@ -43,6 +44,8 @@ jobs:
     timeoutInMinutes: 10
 
   - ${{ parameters.powershellExecutable }}: |
-      build.ps1 -test
+      $moduleName = "PSUnixUtilCompleters"
+      Import-Module ./out/${moduleName}
+      ./build.ps1 -test
     displayName: Execute functional tests
     errorActionPreference: continue

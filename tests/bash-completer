@@ -1,0 +1,71 @@
+#!/bin/bash -l
+
+FindCompletionFunction() {
+    complete -p "$1" 2>/dev/null | awk '{print $(NF-1)}'
+}
+
+if [ $# != 2 ]; then
+echo "need completion script and line to complete" 
+exit 1
+fi
+# set up variables for completions
+# the completion script 
+completionScript=$1
+if [ ! -f $completionScript ]; then 
+echo "$completionScript not found"
+exit 1
+fi
+shift
+declare -a COMPREPLY
+COMP_LINE=$*
+COMP_POINT=${#COMP_LINE}
+eval set -- "$@"
+COMP_WORDS=($@)
+ [[ "${COMP_LINE[@]: -1}" = " " ]] && COMP_WORDS+=('')
+COMP_CWORD=$(( ${#COMP_WORDS[@]} - 1 ))
+
+#echo ">>${COMP_LINE}::"
+#echo ">>${COMP_POINT}::"
+#echo "%%${#COMP_WORDS[@]}%%" >&2
+#echo "^^${COMP_CWORD[@]}^^" >&2
+#printf '**%s**\n' "${COMP_WORDS[@]}" >&2
+
+# determine the completer
+#source /usr/local/etc/bash_completion
+#source /usr/share/bash-completion/bash_completion 
+source $completionScript
+completion=$(FindCompletionFunction ${COMP_WORDS[0]})
+#echo ">>${completion}<<"
+
+# not found, try to load it
+if [[ -z $completion ]]
+then
+    _completion_loader "$1" 2>/dev/null
+    # try to find it again
+    completion=$(FindCompletionFunction ${COMP_WORDS[0]})
+fi
+
+# ensure completion was detected
+if [[ -z $completion ]]
+then
+    exit 1
+fi
+
+# execute completion function
+"$completion"
+#set -x
+#echo ">> $completion" >&2
+# print completions to stdout
+#echo "${COMPREPLY[@]}"|sort -u
+#'s/.*\(--[-A-Za-z0-9]\{1,\}=\{0,1\}\).*/\1/p'
+#'s/.*\(--[-A-Za-z0-9]\{1,\}\).*/\1/p'
+if [[ ${#COMPREPLY[@]} = 1 && ${COMPREPLY[0]} = "--help" ]]
+then
+    COMPREPLY=($("${COMP_WORDS[0]}" "${COMPREPLY[0]}" 2>&1|sed -ne 's/.*\(--[-A-Za-z0-9]\{1,\}=\{0,1\}\).*/\1/p' |sort -u))
+fi
+# try again to get completions
+if [ ${#COMPREPLY} -eq 0 ]
+then
+    COMPREPLY=($(compgen -W '$(_parse_help ${COMP_WORDS[0]})' -- "${COMP_WORDS[1]}"))
+fi
+printf '%s\n' "${COMPREPLY[@]}"|sort -u

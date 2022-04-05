@@ -11,18 +11,25 @@ jobs:
   displayName: ${{ parameters.displayName }}
   steps:
   - ${{ parameters.powershellExecutable }}: |
-      Install-module Pester -Force -MaximumVersion 4.99
+      Install-module Pester -Force
     displayName: Install dependencies - Pester
     timeoutInMinutes: 10
 
   - ${{ parameters.powershellExecutable }}: |
         Install-Module -Name "PSScriptAnalyzer" -RequiredVersion 1.20.0 -Force
-    displayName: Install dependencies
+    displayName: Install dependencies - ScriptAnalyzer
     timeoutInMinutes: 10
 
   - ${{ parameters.powershellExecutable }}: |
-      Get-InstalledModule -Name pester  -AllVersions | Where-Object {$_.Version -ge ([version]::new(5,0,0))} | Uninstall-Module -Force
-    displayName: Remove >= 5.0.0 Pester
+      if ( $IsLinux ) {
+        sudo apt update -y
+        sudo apt install -y bash-completion
+      }
+      else {
+        brew install bash-completion
+      }
+    displayName: Install dependencies - BashCompletion
+    timeoutInMinutes: 10
 
   - task: DownloadBuildArtifacts@0
     displayName: 'Download artifacts'
@@ -33,21 +40,23 @@ jobs:
       downloadPath: '$(System.ArtifactsDirectory)'
 
   - ${{ parameters.powershellExecutable }}: |
-      $sourceName = [guid]::newguid().ToString("N")
-      $moduleName = "PSUnixCompleters"
-      $buildOutputPath = ${}
+      $repoName = [guid]::newguid().ToString("N")
+      $moduleName = "PSUnixUtilCompleters"
+      Get-ChildItem -rec -file | Write-Verbose -Verbose
       try {
-        $null = New-Item -ItemType Directory -Path $buildOutputPath -Verbose
-        Register-PSRepository -Name $sourceName -SourceLocation '$(System.ArtifactsDirectory)' -ErrorAction Ignore
-        Save-Module -Repository $sourceName -Name $moduleName -Path $buildOutputPath
+        Register-PSRepository -Name $repoName -SourceLocation '$(System.ArtifactsDirectory)' -ErrorAction Ignore
+        New-Item -ItemType Directory out
+        Save-Module -Repository $repoName -Name $moduleName -Path out -AcceptLicense -Force
       }
       finally {
-        Unregister-PSRepository -Name $sourceName -ErrorAction SilentlyContinue
+        Unregister-PSRepository -Name $repoName -ErrorAction SilentlyContinue
       }
     displayName: Extract product artifact
     timeoutInMinutes: 10
 
   - ${{ parameters.powershellExecutable }}: |
-      build.ps1 -test
+      $moduleName = "PSUnixUtilCompleters"
+      Import-Module ./out/${moduleName}
+      ./build.ps1 -test
     displayName: Execute functional tests
     errorActionPreference: continue

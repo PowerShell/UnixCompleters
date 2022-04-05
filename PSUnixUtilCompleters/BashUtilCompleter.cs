@@ -14,20 +14,30 @@ namespace PSUnixUtilCompleters
     public class BashUtilCompleter : IUnixUtilCompleter
     {
 
+        private string _completionScript = "/usr/share/bash-completion/bash_completion";
+        public string CompletionScript
+        {
+            get { return _completionScript; }
+            set { _completionScript = value; }
+        }
         private static readonly string s_resolveCompleterCommandTemplate = string.Join("; ", new []
         {
-            "-lic \". /usr/share/bash-completion 2>/dev/null",
-            "__load_completion {0} 2>/dev/null",
-            "complete -p {0} 2>/dev/null | sed -E 's/^complete.*-F ([^ ]+).*$/\\1/'\""
+            "-lc \". {0} 2>/dev/null",
+            "__load_completion {1} 2>/dev/null",
+            "complete -p {1} 2>/dev/null | sed -E 's/^complete.*-F ([^ ]+).*$/\\1/'\""
         });
 
         private readonly Dictionary<string, string> _commandCompletionFunctions;
 
         private readonly string _bashPath;
 
-        public BashUtilCompleter(string bashPath)
+        public BashUtilCompleter(string bashPath, string completionScript)
         {
             _bashPath = bashPath;
+            if (!string.IsNullOrEmpty(completionScript))
+            {
+                _completionScript = completionScript;
+            }
             _commandCompletionFunctions = new Dictionary<string, string>();
         }
 
@@ -140,7 +150,8 @@ namespace PSUnixUtilCompleters
                     continue;
                 }
 
-                int equalsIndex = wordToComplete.IndexOf('=');
+                // int equalsIndex = wordToComplete.IndexOf('=');
+                int equalsIndex = wordToComplete.IndexOf(' ');
 
                 string completionText;
                 string listItemText;
@@ -183,7 +194,7 @@ namespace PSUnixUtilCompleters
                 return completerFunction;
             }
 
-            string resolveCompleterInvocation = string.Format(s_resolveCompleterCommandTemplate, commandName);
+            string resolveCompleterInvocation = string.Format(s_resolveCompleterCommandTemplate, _completionScript, commandName);
             completerFunction = InvokeBashWithArguments(resolveCompleterInvocation).Trim();
             _commandCompletionFunctions[commandName] = completerFunction;
 
@@ -217,7 +228,7 @@ namespace PSUnixUtilCompleters
         }
 
 
-        private static string BuildCompWordsBashArrayString(
+        private string BuildCompWordsBashArrayString(
             string line,
             int replaceAt = -1,
             string replacementWord = null)
@@ -276,7 +287,7 @@ namespace PSUnixUtilCompleters
             return sb.ToString();
         }
 
-        private static string BuildCompletionCommand(
+        private string BuildCompletionCommand(
             string command,
             string COMP_LINE,
             string COMP_WORDS,
@@ -287,7 +298,9 @@ namespace PSUnixUtilCompleters
             string previousWord)
         {
             return new StringBuilder(512)
-                .Append("-lic \". /usr/share/bash-completion/bash_completion 2>/dev/null; ")
+                .Append("-lc \". ")
+                .Append(_completionScript)
+                .Append(" 2>/dev/null; ")
                 .Append("__load_completion ").Append(command).Append(" 2>/dev/null; ")
                 .Append("COMP_LINE=").Append(COMP_LINE).Append("; ")
                 .Append("COMP_WORDS=").Append(COMP_WORDS).Append("; ")

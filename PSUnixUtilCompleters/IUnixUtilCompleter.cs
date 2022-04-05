@@ -31,5 +31,11 @@ namespace PSUnixUtilCompleters
             string wordToComplete,
             CommandAst commandAst,
             int cursorPosition);
+
+        public string Name
+        {
+            get { return this.GetType().Name; }
+            private set { }
+        }
     }
 }

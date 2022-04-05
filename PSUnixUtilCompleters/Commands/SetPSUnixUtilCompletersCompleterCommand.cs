@@ -18,6 +18,10 @@ namespace PSUnixUtilCompleters.Commands
         [Parameter(Position = 0, Mandatory = true, ParameterSetName = "ShellType")]
         [Parameter(Position = 1, ParameterSetName = "Shell")]
         public ShellType ShellType { get; set; }
+        
+        // should this be a dynamic parameter?
+        [Parameter(ParameterSetName = "ShellType")]
+        public string CompletionScript { get; set; }
 
         protected override void EndProcessing()
         {
@@ -50,7 +54,7 @@ namespace PSUnixUtilCompleters.Commands
                         break;
 
                     case ShellType.Bash:
-                        Completer = new BashUtilCompleter(shellPath);
+                        Completer = new BashUtilCompleter(shellPath, CompletionScript);
                         break;
 
                     default:

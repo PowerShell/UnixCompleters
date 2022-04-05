@@ -27,24 +27,36 @@ stages:
       vmImage: windows-2019
     steps:
     - pwsh: |
-        Install-module Pester -Force -MaximumVersion 4.99
-      displayName: Install dependencies - Pester
-      timeoutInMinutes: 10
-
-    - pwsh: |
-        Install-Module -Name "PSScriptAnalyzer" -RequiredVersion 1.20.0 -Force
-      displayName: Install PSScriptAnalyzer
-      timeoutInMinutes: 10
-
-    - pwsh: |
-        $(Build.SourcesDirectory)/build.ps1 -Build -Configuration Release
+        $(Build.SourcesDirectory)/build.ps1 -Configuration Release
       displayName: Build
 
     - pwsh: |
+        $env:BUILD_OUTPUT_PATH = "$(Build.SourcesDirectory)/out"
+        $env:SIGNED_OUTPUT_PATH = "$(Build.SourcesDirectory)/signed"
+        (Get-Item -ea ignore "$(Build.SourcesDirectory)/signed") || (New-Item -ItemType Directory -Path "$(Build.SourcesDirectory)/signed")
         Write-Verbose "BUILD_OUTPUT_PATH- $env:BUILD_OUTPUT_PATH" -Verbose
         Write-Verbose "SIGNED_OUTPUT_PATH- $env:SIGNED_OUTPUT_PATH" -Verbose
-        Copy-Item $env:BUILD_OUTPUT_PATH $env:SIGNED_OUTPUT_PATH -Recurse -Force
+        Copy-Item "${env:BUILD_OUTPUT_PATH}/*" $env:SIGNED_OUTPUT_PATH -Recurse -Force -Verbose
       displayName: Build Signing Placeholder
+
+    - pwsh: |
+        $repoName = [guid]::newguid().ToString("N")
+        $moduleName = "PSUnixUtilCompleters"
+        try {
+          Register-PSRepository -Name $repoName -SourceLocation '$(System.ArtifactsDirectory)' -ErrorAction Ignore
+          Publish-Module -Repository $repoName -Path "$(Build.SourcesDirectory)/signed/${moduleName}"
+          $nupkg = Get-ChildItem '$(System.ArtifactsDirectory)/*.nupkg'
+          $nupkgName = $nupkg.Name
+          $nupkgPath = $nupkg.FullName
+          Write-Host "##vso[artifact.upload containerfolder=$nupkgName;artifactname=$nupkgName;]$nupkgPath"
+        }
+        finally {
+          Unregister-PSRepository -Name $repoName -ErrorAction SilentlyContinue
+        }
+        Get-ChildItem -rec '$(System.ArtifactsDirectory)' | Write-Verbose -Verbose
+        Get-ChildItem -rec -file | Write-Verbose -Verbose
+      displayName: Create module package
+
 
 - stage: Compliance
   displayName: Compliance
@@ -65,10 +77,10 @@ stages:
     parameters:
       jobName: TestPkgUbuntu18
       displayName: PowerShell Core on Ubuntu 18.04
-      imageName: ubuntu-18.04
+      imageName: ubuntu-latest
 
   - template: test.yml
     parameters:
       jobName: TestPkgWinMacOS
       displayName: PowerShell Core on macOS
-      imageName: macOS-10.14
+      imageName: macOS-latest

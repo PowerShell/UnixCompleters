@@ -49,7 +49,7 @@ stages:
         finally {
           Unregister-PSRepository -Name $sourceName -ErrorAction SilentlyContinue
         }
-      displayName: Create completer module package
+      displayName: Create module package
 
 
 - stage: Compliance

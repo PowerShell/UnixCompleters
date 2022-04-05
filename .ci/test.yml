@@ -17,7 +17,18 @@ jobs:
 
   - ${{ parameters.powershellExecutable }}: |
         Install-Module -Name "PSScriptAnalyzer" -RequiredVersion 1.20.0 -Force
-    displayName: Install dependencies
+    displayName: Install dependencies - ScriptAnalyzer
+    timeoutInMinutes: 10
+
+  - ${{ parameters.powershellExecutable }}: |
+      if ( $IsLinux ) {
+        apt update -y
+        apt install -y bash
+      }
+      else {
+        brew install bash-completion
+      }
+    displayName: Install dependencies - BashCompletion
     timeoutInMinutes: 10
 
   - task: DownloadBuildArtifacts@0

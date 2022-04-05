@@ -115,7 +115,7 @@ if ($PSCmdlet.ParameterSetName -eq 'Build' -or $Build)
 if ($Test) {
     $pwsh = (Get-Process -Id $PID).Path
     $testPath = "$PSScriptRoot/tests"
-    & $pwsh -noprofile -c "Import-Module Pester; Invoke-Pester -PassThru -CI '$testPath'|select-object -expand tests|ft name,result"
+    & $pwsh -noprofile -c "Import-Module Pester; Invoke-Pester -output Detailed -CI '$testPath'"
 }
 
 # if we're signed, the files must be in 'signed' rather than 'out' directory

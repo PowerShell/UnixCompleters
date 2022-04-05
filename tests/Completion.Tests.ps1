@@ -18,13 +18,22 @@ Describe 'PSUnixUtilCompleters completion tests' {
 
     Context "Bash completions" {
         BeforeDiscovery {
+            if ( $skipZsh ) {
+                return
+            }
+            if (Test-Path /etc/bash_completion) {
+                $bashCompletionScript = "/etc/bash_completion"
+            }
+            else {
+                $bashCompletionScript = "/usr/local/etc/bash_completion"
+            }
             $bcomp = "$PSScriptRoot/bash-completer"
             [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "")]
             $completionTestCases = @(
-                @{ InStr = 'gzip --'; CursorPos = 7; Suggestions = (& $bsh -c "$bcomp /usr/local/etc/bash_completion 'gzip --'") }
-                @{ InStr = 'dd i'; CursorPos = 4; Suggestions = (& $bsh -c "$bcomp  /usr/local/etc/bash_completion 'dd i'") }
+                @{ InStr = 'gzip --'; CursorPos = 7; Suggestions = (& $bsh -c "$bcomp $bashCompletionScript 'gzip --'") }
+                @{ InStr = 'dd i'; CursorPos = 4; Suggestions = (& $bsh -c "$bcomp  $bashCompletionScript 'dd i'") }
             )
-            Set-PSUnixUtilCompleter -ShellType Bash -CompletionScript /usr/local/etc/bash_completion
+            Set-PSUnixUtilCompleter -ShellType Bash -CompletionScript $bashCompletionScript
         }
 
         It "Completes <InStr> correctly" -foreach $completionTestCases -skip:$skipBsh {
@@ -41,6 +50,9 @@ Describe 'PSUnixUtilCompleters completion tests' {
 
     Context "Zsh completions" {
         BeforeDiscovery {
+            if ( $skipZsh ) {
+                return
+            }
             $moduleVersion = (Get-Module PSUnixUtilCompleters).Version.ToString()
             $zcomp = "$PSScriptRoot/../out/PSUnixUtilCompleters/${moduleVersion}/zcomplete.sh"
             [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "")]

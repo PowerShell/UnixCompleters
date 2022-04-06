@@ -32,7 +32,7 @@ stages:
 
     - pwsh: |
         Set-Location "$(Build.SourcesDirectory)"
-        ./build.ps1 -Publish
+        ./build.ps1 -Configuration Release
         Get-ChildItem -Recurse -File -Name | Write-Verbose -Verbose
       displayName: Execute build
 

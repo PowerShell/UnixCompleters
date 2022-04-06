@@ -19,7 +19,7 @@ stages:
 - stage: Build
   displayName: Build
   pool:
-    name: PowerShell1ES # Package ES CodeHub Lab E
+    name: PS1ES-ReleaseAutomation
     demands:
       - ImageOverride -equals PSMMS2019-Secure
   jobs:
@@ -114,7 +114,7 @@ stages:
   jobs:
   - job: Compliance_Job
     pool:
-      name: PowerShell1ES # Package ES CodeHub Lab E
+      name: PS1ES-ReleaseAutomation
     steps:
     - checkout: self
     - checkout: ComplianceRepo

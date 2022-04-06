@@ -1,6 +1,9 @@
 name: UnixCompleters-Release-$(Build.BuildId)
-trigger: none
-
+trigger:
+  batch: true
+  branches:
+    include:
+    - main
 pr: none
 
 variables:
@@ -19,7 +22,7 @@ stages:
 - stage: Build
   displayName: Build
   pool:
-    name: PS1ES-ReleaseAutomation
+    name: 1ES
     demands:
       - ImageOverride -equals PSMMS2019-Secure
   jobs:
@@ -31,23 +34,24 @@ stages:
     - checkout: self
 
     - pwsh: |
-        Set-Location "$(Build.SourcesDirectory)"
-        ./build.ps1 -Configuration Release
+        Set-Location "$(Build.SourcesDirectory)/UnixCompleters"
         Get-ChildItem -Recurse -File -Name | Write-Verbose -Verbose
+        ./build.ps1 -Configuration Release
       displayName: Execute build
 
     - pwsh: |
-        $signSrcPath = "$(Build.SourcesDirectory)"
+        $signSrcPath = "$(Build.SourcesDirectory)/UnixCompleters"
+        Set-Location "$signSrcPath"
         $moduleName = "PSUnixUtilCompleters"
         $moduleInfo = Import-PowerShellDataFile -Path "${moduleName}.psd1"
         $moduleVersion = $moduleInfo.ModuleVersion.ToString()
-        $signSrcPath = "$(Build.SourcesDirectory)/out/${moduleName}"
+        $signSrcPath = "$(Build.SourcesDirectory)/UnixCompleters/out/${moduleName}"
 
         # Set signing src path variable
         $vstsCommandString = "vso[task.setvariable variable=signSrcPath]${signSrcPath}"
         Write-Host "##$vstsCommandString"
 
-        $signOutPath = "$(Build.SourcesDirectory)/signed/${moduleName}
+        $signOutPath = "$(Build.SourcesDirectory)/UnixCompleters/signed/${moduleName}"
         $null = New-Item -ItemType Directory -Path $signOutPath
         # Set signing out path variable
         $vstsCommandString = "vso[task.setvariable variable=signOutPath]${signOutPath}"
@@ -78,6 +82,7 @@ stages:
         Build_Repository_Uri: 'https://github.com/powershell/UnixCompleters'
 
     - pwsh: |
+        Get-ChildItem -Recu -File
         $noSignFiles = "zcomplete.sh","LICENSE.txt"
         $src = $env:signSrcPath
         $dst = $env:signOutPath
@@ -91,7 +96,7 @@ stages:
         $moduleName = "PSUnixUtilCompleters"
         try {
           Register-PSRepository -Name $repoName -SourceLocation '$(System.ArtifactsDirectory)' -ErrorAction Ignore
-          Publish-Module -Repository $repoName -Path "$(Build.SourcesDirectory)/signed/${moduleName}"
+          Publish-Module -Repository $repoName -Path "$(Build.SourcesDirectory)/UnixCompleters/signed/${moduleName}"
           $nupkg = Get-ChildItem '$(System.ArtifactsDirectory)/*.nupkg'
           $nupkgName = $nupkg.Name
           $nupkgPath = $nupkg.FullName
@@ -114,7 +119,7 @@ stages:
   jobs:
   - job: Compliance_Job
     pool:
-      name: PS1ES-ReleaseAutomation
+      name: 1ES
     steps:
     - checkout: self
     - checkout: ComplianceRepo

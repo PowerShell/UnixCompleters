@@ -45,13 +45,13 @@ stages:
         $moduleName = "PSUnixUtilCompleters"
         $moduleInfo = Import-PowerShellDataFile -Path "${moduleName}.psd1"
         $moduleVersion = $moduleInfo.ModuleVersion.ToString()
-        $signSrcPath = "$(Build.SourcesDirectory)/UnixCompleters/out/${moduleName}"
+        $signSrcPath = "$(Build.SourcesDirectory)/UnixCompleters/out/${moduleName}/${moduleVersion}"
 
         # Set signing src path variable
         $vstsCommandString = "vso[task.setvariable variable=signSrcPath]${signSrcPath}"
         Write-Host "##$vstsCommandString"
 
-        $signOutPath = "$(Build.SourcesDirectory)/UnixCompleters/signed/${moduleName}"
+        $signOutPath = "$(Build.SourcesDirectory)/UnixCompleters/signed/${moduleName}/${moduleVersion}"
         $null = New-Item -ItemType Directory -Path $signOutPath
         # Set signing out path variable
         $vstsCommandString = "vso[task.setvariable variable=signOutPath]${signOutPath}"
@@ -82,10 +82,14 @@ stages:
         Build_Repository_Uri: 'https://github.com/powershell/UnixCompleters'
 
     - pwsh: |
-        Get-ChildItem -Recu -File
-        $noSignFiles = "zcomplete.sh","LICENSE.txt"
         $src = $env:signSrcPath
         $dst = $env:signOutPath
+        Set-Location "$src"
+        Get-ChildItem -Recu -File
+        $moduleName = "PSUnixUtilCompleters"
+        $moduleInfo = Import-PowerShellDataFile -Path "${moduleName}.psd1"
+        $moduleVersion = $moduleInfo.ModuleVersion.ToString()
+        $noSignFiles = "zcomplete.sh","LICENSE.txt"
         foreach($file in $noSignFiles) {
           copy-item (Join-Path $src $file) (Join-Path $dst $file)
         }

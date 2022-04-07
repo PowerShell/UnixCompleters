@@ -144,7 +144,7 @@ stages:
         optionsRulesDBPath: ''
         optionsFTPath: ''
         # tsa-upload
-        codeBaseName: 'unassigned'
+        codeBaseName: 'UnixCompleters_20220407'
         # selections
         APIScan: false # set to false when not using Windows APIs.
 

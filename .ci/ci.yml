@@ -41,7 +41,7 @@ stages:
 
     - pwsh: |
         $repoName = [guid]::newguid().ToString("N")
-        $moduleName = "PSUnixUtilCompleters"
+        $moduleName = "Microsoft.PowerShell.UnixTabCompletion"
         try {
           Register-PSRepository -Name $repoName -SourceLocation '$(System.ArtifactsDirectory)' -ErrorAction Ignore
           Publish-Module -Repository $repoName -Path "$(Build.SourcesDirectory)/signed/${moduleName}"

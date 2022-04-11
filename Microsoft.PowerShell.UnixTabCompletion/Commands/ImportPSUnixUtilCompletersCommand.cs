@@ -2,10 +2,10 @@ using System;
 using System.Collections.ObjectModel;
 using System.Management.Automation;
 
-namespace PSUnixUtilCompleters.Commands
+namespace Microsoft.PowerShell.UnixTabCompletion.Commands
 {
-    [Cmdlet(VerbsData.Import, Utils.ModulePrefix + "Completers")]
-    public class ImportPSUnixUtilCompletersCommand : PSCmdlet
+    [Cmdlet(VerbsData.Import, Utils.ModuleName)]
+    public class ImportUnixTabCompletionCommand : PSCmdlet
     {
         protected override void EndProcessing()
         {

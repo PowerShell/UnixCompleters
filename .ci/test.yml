@@ -41,7 +41,7 @@ jobs:
 
   - ${{ parameters.powershellExecutable }}: |
       $repoName = [guid]::newguid().ToString("N")
-      $moduleName = "PSUnixUtilCompleters"
+      $moduleName = "Microsoft.PowerShell.UnixTabCompletion"
       Get-ChildItem -rec -file | Write-Verbose -Verbose
       try {
         Register-PSRepository -Name $repoName -SourceLocation '$(System.ArtifactsDirectory)' -ErrorAction Ignore
@@ -55,7 +55,7 @@ jobs:
     timeoutInMinutes: 10
 
   - ${{ parameters.powershellExecutable }}: |
-      $moduleName = "PSUnixUtilCompleters"
+      $moduleName = "Microsoft.PowerShell.UnixTabCompletion"
       Import-Module ./out/${moduleName}
       ./build.ps1 -test
     displayName: Execute functional tests

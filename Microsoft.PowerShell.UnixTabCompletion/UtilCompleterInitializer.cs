@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 
-namespace PSUnixUtilCompleters
+namespace Microsoft.PowerShell.UnixTabCompletion
 {
     public enum ShellType
     {
@@ -106,7 +106,7 @@ namespace PSUnixUtilCompleters
 
         private void WriteError(string errorMessage)
         {
-            using (var pwsh = PowerShell.Create())
+            using (var pwsh = System.Management.Automation.PowerShell.Create())
             {
                 pwsh.AddCommand("Write-Error")
                     .AddParameter("Message", errorMessage)

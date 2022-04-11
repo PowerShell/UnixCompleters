@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 
-namespace PSUnixUtilCompleters
+namespace Microsoft.PowerShell.UnixTabCompletion
 {
     /// <summary>
     /// Provides completions for native Unix commands.

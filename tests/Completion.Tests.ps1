@@ -1,6 +1,6 @@
-Describe 'PSUnixUtilCompleters completion tests' {
+Describe 'Microsoft.PowerShell.UnixTabCompletion completion tests' {
     BeforeDiscovery {
-        Import-Module "$PSScriptRoot/../out/PSUnixUtilCompleters"
+        Import-Module "$PSScriptRoot/../out/Microsoft.PowerShell.UnixTabCompletion"
         $zsh = Get-Command -ErrorAction Ignore zsh
         $bsh = Get-Command -ErrorAction Ignore /bin/bash
         $skipZsh = $null -eq $zsh ? $true : $false
@@ -37,7 +37,7 @@ Describe 'PSUnixUtilCompleters completion tests' {
                 @{ InStr = 'gzip --'; CursorPos = 7; Suggestions = (& $bsh -c "$bcomp $bashCompletionScript 'gzip --'") }
                 @{ InStr = 'dd i'; CursorPos = 4; Suggestions = (& $bsh -c "$bcomp  $bashCompletionScript 'dd i'") }
             )
-            Set-PSUnixUtilCompleter -ShellType Bash -CompletionScript $bashCompletionScript
+            Set-PSUnixTabCompletion -ShellType Bash -CompletionScript $bashCompletionScript
         }
 
         It "Completes <InStr> correctly" -foreach $completionTestCases -skip:$skipBsh {
@@ -64,8 +64,8 @@ Describe 'PSUnixUtilCompleters completion tests' {
                 )
                 return
             }
-            $moduleVersion = (Get-Module PSUnixUtilCompleters).Version.ToString()
-            $zcomp = "$PSScriptRoot/../out/PSUnixUtilCompleters/${moduleVersion}/zcomplete.sh"
+            $moduleVersion = (Get-Module Microsoft.PowerShell.UnixTabCompletion).Version.ToString()
+            $zcomp = "$PSScriptRoot/../out/Microsoft.PowerShell.UnixTabCompletion/${moduleVersion}/zcomplete.sh"
             [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "")]
             $completionTestCases = @(
                 @{ InStr = 'ls -a';   CursorPos = 5; Suggestions = (& $zsh $zcomp 'ls -a').where({"$_" -match ' -- '}).foreach({"$_".Split(' ')[0]}) }
@@ -74,7 +74,7 @@ Describe 'PSUnixUtilCompleters completion tests' {
                 @{ InStr = 'cat -';   CursorPos = 5; Suggestions = (& $zsh $zcomp 'cat -').where({"$_" -match ' -- '}).foreach({"$_".Split(' ')[0]}) }
                 @{ InStr = 'ps au';   CursorPos = 5; Suggestions = (& $zsh $zcomp 'ps au').where({"$_" -match ' -- '}).foreach({"$_".Split(' ')[0]}) }
             )
-            Set-PSUnixUtilCompleter -ShellType Zsh
+            Set-PSUnixTabCompletion -ShellType Zsh
         }
 
         It "Completes '<inStr>' correctly" -foreach $completionTestCases -skip:$skipZsh {

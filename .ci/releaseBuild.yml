@@ -22,7 +22,7 @@ stages:
     name: PowerShell1ES # Package ES CodeHub Lab E
   jobs:
   - job: Build_Job
-    displayName: Build Microsoft.PowerShell.UnixCompleters
+    displayName: Build Microsoft.PowerShell.UnixTabCompletion
     variables:
     - group: ESRP
     steps:

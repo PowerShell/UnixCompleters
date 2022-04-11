@@ -5,7 +5,7 @@ using System.Management.Automation;
 using System.Management.Automation.Language;
 using System.Text;
 
-namespace PSUnixUtilCompleters
+namespace Microsoft.PowerShell.UnixTabCompletion
 {
     public static class UnixUtilCompletion
     {

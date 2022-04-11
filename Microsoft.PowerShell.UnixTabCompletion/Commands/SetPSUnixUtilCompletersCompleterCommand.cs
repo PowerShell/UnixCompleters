@@ -1,10 +1,10 @@
 using System;
 using System.Management.Automation;
 
-namespace PSUnixUtilCompleters.Commands
+namespace Microsoft.PowerShell.UnixTabCompletion.Commands
 {
-    [Cmdlet(VerbsCommon.Set, Utils.ModulePrefix + "Completer")]
-    public class SetPSUnixUtilCompletersCompleterCommand : Cmdlet
+    [Cmdlet(VerbsCommon.Set, Utils.ModuleName)]
+    public class SetUnixTabCompletionCommand : Cmdlet
     {
         [ValidateNotNull()]
         [Parameter(Position = 0, Mandatory = true, ParameterSetName = "Completer")]

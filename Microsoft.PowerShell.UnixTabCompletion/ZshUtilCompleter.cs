@@ -7,7 +7,7 @@ using System.Management.Automation.Language;
 using System.Reflection;
 using System.Text;
 
-namespace PSUnixUtilCompleters
+namespace Microsoft.PowerShell.UnixTabCompletion
 {
     public class ZshUtilCompleter : IUnixUtilCompleter
     {

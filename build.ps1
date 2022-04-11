@@ -30,23 +30,23 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$script:ModuleName = 'PSUnixUtilCompleters'
+$script:ModuleName = 'Microsoft.PowerShell.UnixTabCompletion'
 $script:ModuleVersion = (Import-PowerShellDataFile -Path "${PSScriptRoot}/${ModuleName}.psd1").ModuleVersion
 $script:OutDir = "${PSScriptRoot}/out"
 $script:ModuleBase = "${PSScriptRoot}/out/${script:ModuleName}"
 $script:OutModuleDir = "${ModuleBase}/${script:ModuleVersion}"
-$script:SrcDir = "$PSScriptRoot/PSUnixUtilCompleters"
+$script:SrcDir = "$PSScriptRoot/${ModuleName}"
 $script:Framework = 'netstandard2.1'
 $script:ZshCompleterScriptLocation = "${script:OutModuleDir}/zcomplete.sh"
 
 $script:Artifacts = @{
     "OnStart.ps1" = "OnStart.ps1"
     "${script:ModuleName}.psd1" = "${script:ModuleName}.psd1"
-    "PSUnixUtilCompleters/bin/$Configuration/${script:Framework}/PSUnixUtilCompleters.dll" = 'PSUnixUtilCompleters.dll'
+    "${ModuleName}/bin/$Configuration/${script:Framework}/${ModuleName}.dll" = "${ModuleName}.dll"
     "LICENSE" = "LICENSE.txt"
 }
 if ( $Configuration -eq 'Debug' ) {
-    ${script:Artifacts}["PSUnixUtilCompleters/bin/$Configuration/${script:Framework}/PSUnixUtilCompleters.pdb"] = 'PSUnixUtilCompleters.pdb'
+    ${script:Artifacts}["${ModuleName}/bin/$Configuration/${script:Framework}/${ModuleName}.pdb"] = "${ModuleName}.pdb"
 }
 
 function Exec([scriptblock]$sb, [switch]$IgnoreExitcode)

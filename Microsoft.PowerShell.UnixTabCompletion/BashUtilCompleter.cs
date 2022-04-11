@@ -9,7 +9,7 @@ using System.Management.Automation.Language;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace PSUnixUtilCompleters
+namespace Microsoft.PowerShell.UnixTabCompletion
 {
     public class BashUtilCompleter : IUnixUtilCompleter
     {

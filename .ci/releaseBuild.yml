@@ -1,6 +1,9 @@
-name: UnixCompleters-Release-$(Build.BuildId)
-trigger: none
-
+name: Microsoft.PowerShell.UnixTabCompletion-Release-$(Build.BuildId)
+trigger:
+  batch: true
+  branches:
+    include:
+    - main
 pr: none
 
 variables:
@@ -19,7 +22,9 @@ stages:
 - stage: Build
   displayName: Build
   pool:
-    name: PowerShell1ES # Package ES CodeHub Lab E
+    name: 1ES
+    demands:
+      - ImageOverride -equals PSMMS2019-Secure
   jobs:
   - job: Build_Job
     displayName: Build Microsoft.PowerShell.UnixTabCompletion
@@ -29,33 +34,32 @@ stages:
     - checkout: self
 
     - pwsh: |
-        Install-Module -Name "platyPS" -Force
-      displayName: Install dependencies - PlatyPS
-      timeoutInMinutes: 10
-
-    - pwsh: |
         Set-Location "$(Build.SourcesDirectory)/UnixCompleters"
-        ./build.ps1 -Publish
         Get-ChildItem -Recurse -File -Name | Write-Verbose -Verbose
+        ./build.ps1 -Configuration Release
       displayName: Execute build
 
     - pwsh: |
-        $signSrcPath = "$(Build.SourcesDirectory)/UnixCompleters/out"
+        $repoName = "UnixCompleters"
+        $signSrcPath = "$(Build.SourcesDirectory)/${repoName}"
+        Set-Location "$signSrcPath"
+        $moduleName = "Microsoft.PowerShell.UnixTabCompletion"
+        $moduleInfo = Import-PowerShellDataFile -Path "${moduleName}.psd1"
+        $moduleVersion = $moduleInfo.ModuleVersion.ToString()
+        $signSrcPath = "$(Build.SourcesDirectory)/${repoName}/out/${moduleName}/${moduleVersion}"
+
         # Set signing src path variable
         $vstsCommandString = "vso[task.setvariable variable=signSrcPath]${signSrcPath}"
-        Write-Host "sending " + $vstsCommandString
         Write-Host "##$vstsCommandString"
 
-        $signOutPath = "$(Build.SourcesDirectory)/UnixCompleters/signed"
+        $signOutPath = "$(Build.SourcesDirectory)/${repoName}/signed/${moduleName}/${moduleVersion}"
         $null = New-Item -ItemType Directory -Path $signOutPath
         # Set signing out path variable
         $vstsCommandString = "vso[task.setvariable variable=signOutPath]${signOutPath}"
-        Write-Host "sending " + $vstsCommandString
         Write-Host "##$vstsCommandString"
 
         # Set path variable for guardian codesign validation
         $vstsCommandString = "vso[task.setvariable variable=GDN_CODESIGN_TARGETDIRECTORY]${signOutPath}"
-        Write-Host "sending " + $vstsCommandString
         Write-Host "##$vstsCommandString"
 
       displayName: Setup variables for signing
@@ -71,7 +75,7 @@ stages:
         # the certificate ID to use
         certificateId: "CP-230012"
         # the file pattern to use, comma separated
-        pattern: '*.psm1,*.psd1,*.ps1xml,*.ps1'
+        pattern: '*.psm1,*.psd1,*.ps1xml,*.ps1,*.dll'
 
     - template: Sbom.yml@ComplianceRepo
       parameters:
@@ -79,10 +83,36 @@ stages:
         Build_Repository_Uri: 'https://github.com/powershell/UnixCompleters'
 
     - pwsh: |
-        Set-Location "$(Build.SourcesDirectory)/UnixCompleters"
-        ./build -package -CopySBOM -signed
-        Get-ChildItem -recurse -file -name | Write-Verbose -Verbose
-      displayName: package build
+        $src = $env:signSrcPath
+        $dst = $env:signOutPath
+        Set-Location "$src"
+        Get-ChildItem -Recu -File
+        $moduleName = "Microsoft.PowerShell.UnixTabCompletion"
+        $moduleInfo = Import-PowerShellDataFile -Path "${moduleName}.psd1"
+        $moduleVersion = $moduleInfo.ModuleVersion.ToString()
+        $noSignFiles = "zcomplete.sh","LICENSE.txt"
+        foreach($file in $noSignFiles) {
+          copy-item (Join-Path $src $file) (Join-Path $dst $file)
+        }
+      displayName: Copy unsigned files
+
+    - pwsh: |
+        $repoName = [guid]::newguid().ToString("N")
+        $moduleName = "Microsoft.PowerShell.UnixTabCompletion"
+        try {
+          Register-PSRepository -Name $repoName -SourceLocation '$(System.ArtifactsDirectory)' -ErrorAction Ignore
+          Publish-Module -Repository $repoName -Path "$(Build.SourcesDirectory)/UnixCompleters/signed/${moduleName}"
+          $nupkg = Get-ChildItem '$(System.ArtifactsDirectory)/*.nupkg'
+          $nupkgName = $nupkg.Name
+          $nupkgPath = $nupkg.FullName
+          Write-Host "##vso[artifact.upload containerfolder=$nupkgName;artifactname=$nupkgName;]$nupkgPath"
+        }
+        finally {
+          Unregister-PSRepository -Name $repoName -ErrorAction SilentlyContinue
+        }
+        Get-ChildItem -rec '$(System.ArtifactsDirectory)' | Write-Verbose -Verbose
+        Get-ChildItem -rec -file | Write-Verbose -Verbose
+      displayName: Create signed module nupkg
 
     - publish: "$(signSrcPath)"
       artifact: build
@@ -94,7 +124,7 @@ stages:
   jobs:
   - job: Compliance_Job
     pool:
-      name: PowerShell1ES # Package ES CodeHub Lab E
+      name: 1ES
     steps:
     - checkout: self
     - checkout: ComplianceRepo
@@ -108,14 +138,14 @@ stages:
     - template: script-module-compliance.yml@ComplianceRepo
       parameters:
         # component-governance
-        sourceScanPath: '$(Build.SourcesDirectory)/UnixCompleters/Microsoft.PowerShell.UnixCompleters/src'
+        sourceScanPath: '$(Build.SourcesDirectory)'
         # credscan
         suppressionsFile: ''
         # TermCheck
         optionsRulesDBPath: ''
         optionsFTPath: ''
         # tsa-upload
-        codeBaseName: 'PSNativeCommandProxy_2020'
+        codeBaseName: 'UnixCompleters_20220407'
         # selections
         APIScan: false # set to false when not using Windows APIs.
 

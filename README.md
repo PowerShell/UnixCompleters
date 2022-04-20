@@ -66,6 +66,40 @@ $myCompleter = [MyCompleter]::new()
 Set-PSUnixTabCompletion -Completer $myCompleter
 ```
 
+You can retrieve the current configuration with the `Get-PSUnixTabCompletion` cmdlet:
+
+```powershell
+PS> Get-PSUnixTabCompletion
+
+Name
+----
+ZshUtilCompleter
+```
+
+## Supporting different versions of Bash
+
+`bash` may have different tab completion depending on the version and system.
+To provide greater flexibility, setting `bash` tab completion via `Set-PSUnixTabCompletion` supports an additional parameter.
+If your completion script is in an alternative location,
+you may provide the location of the completion script as a parameter to `Set-PSUnixTabCompletion`.
+By default, this value is set to `/usr/share/bash-completion/bash_completion` which should work for most Linux systems.
+This is roughly equivalent to the `source /usr/share/bash-completion/bash_completion` which may be needed by MacOS.
+
+```powershell
+Set-PSUnixTabCompletion -ShellType Bash -CompletionScript /usr/local/etc/bash_completion
+```
+
+When the shell is set to bash, `Get-PSUnixTabCompletion` will return the completion script.
+
+```powershell
+[UnixCompleters-1|main↑0↓0•0+1?2] 🐚> Set-PSUnixTabCompletion -ShellType Bash -CompletionScript /usr/local/etc/bash_completion
+[UnixCompleters-1|main↑0↓0•0+1?2] 🐚> Get-PSUnixTabCompletion
+
+CompletionScript               Name
+----------------               ----
+/usr/local/etc/bash_completion BashUtilCompleter
+```
+
 ## Unregistering UNIX util completions
 
 The Microsoft.PowerShell.UnixTabCompletion module will unregister completers

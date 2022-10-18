@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 Describe 'Microsoft.PowerShell.UnixTabCompletion completion tests' {
     BeforeDiscovery {
         Import-Module "$PSScriptRoot/../out/Microsoft.PowerShell.UnixTabCompletion"

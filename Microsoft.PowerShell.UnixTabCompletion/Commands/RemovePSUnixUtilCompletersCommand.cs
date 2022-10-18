@@ -8,7 +8,7 @@ namespace Microsoft.PowerShell.UnixTabCompletion.Commands
     {
         protected override void EndProcessing()
         {
-            InvokeCommand.InvokeScript("Remove-Module -Name Microsoft.PowerShell.UnixTabCompletion -Scope All -Force");
+            InvokeCommand.InvokeScript("Remove-Module -Name Microsoft.PowerShell.UnixTabCompletion -Force");
         }
     }
 }
